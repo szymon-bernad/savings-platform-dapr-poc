@@ -1,0 +1,23 @@
+{
+  "transactionId": "qwertyz41",
+  "type": "CreateNew",
+  "details": {
+"externalRef" : "2023-12-16-test04",
+ "interestRate" : 6.03,
+"settlementAccountRef" : "main-settle-acc"
+
+  }
+}
+
+===
+{
+  "transactionId": "qwertyz42",
+  "type": "Transfer",
+  "details": {
+"savingsAccountRef" : "2023-12-16-test104",
+"amount": 6500.00,
+"direction": "ToSavingsAccount",
+"transactionDate": "2023-12-16T15:35:00.000Z"
+
+  }
+}

@@ -1,0 +1,17 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore-payments
+  namespace: payments
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: statestoreredis:6379
+  - name: redisPassword
+    value: "passw00rd"
+  - name: timeoutInSeconds
+    value: 60
+scopes:
+- dapr-payment-proxy
