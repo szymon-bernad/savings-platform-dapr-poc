@@ -16,3 +16,6 @@ Uses Dapr PubSub mechanism and Dapr Service Invocation.
 
 PoC of Event Store based on Marten (https://martendb.io/events/). This service consumes events from `SavingsPlatform API` and manages Event Store.
 Uses Dapr PubSub to subscribe to events.
+
+
+![Diagram with SavingsPlatform overview](https://github.com/szymon-bernad/savings-platform-dapr-poc/blob/main/system-overview-7-01-2024.png)
