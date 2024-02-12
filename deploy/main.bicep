@@ -131,7 +131,7 @@ module spEventStoreApp 'container-app.bicep' = {
       }
       {
          name: 'ConnectionStrings__DocumentStore'
-         value: 'host=dapr-tst-pgdb.postgres.database.azure.com;username=postgresadm;password=example123!;port=5432;database=event-store'
+         value: ''
       }
       {
          name: 'DocumentStoreConfig__PlatformId'
@@ -235,7 +235,7 @@ resource statestoreDaprComponent 'Microsoft.App/managedEnvironments/daprComponen
     secrets: [
       {
         name: 'pg-conn'
-        value: 'host=dapr-tst-pgdb.postgres.database.azure.com user=postgresadm password=example123! port=5432 connect_timeout=65 database=dapr-store'
+        value: ''
       }
     ]
     metadata: [
