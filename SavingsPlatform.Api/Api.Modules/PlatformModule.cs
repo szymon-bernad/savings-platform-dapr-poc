@@ -26,7 +26,7 @@ namespace SavingsPlatform.Api.Api.Modules
          //     });
 
             app.MapPost("v1/accounts/:handle-debited-event",
-                        [Topic("pubsub", "AccountDebited")] async (AccountDebited @event, IActorProxyFactory actorProxyFactory) =>
+                        [Topic("savingspubsub", "AccountDebited")] async (AccountDebited @event, IActorProxyFactory actorProxyFactory) =>
                         {
                             if (@event.TransferId != null)
                             {
@@ -39,7 +39,7 @@ namespace SavingsPlatform.Api.Api.Modules
                         });
 
             app.MapPost("v1/accounts/:handle-credited-event",
-                        [Topic("pubsub", "AccountCredited")] async (AccountCredited @event, IActorProxyFactory actorProxyFactory) =>
+                        [Topic("savingspubsub", "AccountCredited")] async (AccountCredited @event, IActorProxyFactory actorProxyFactory) =>
                         {
                             if (@event.TransferId != null)
                             {
@@ -52,7 +52,7 @@ namespace SavingsPlatform.Api.Api.Modules
                         });
 
             app.MapPost("v1/accounts/:handle-iasaactivated-event",
-                        [Topic("pubsub", "InstantAccessSavingsAccountActivated")] async (InstantAccessSavingsAccountActivated @event, IActorProxyFactory actorProxyFactory) =>
+                        [Topic("savingspubsub", "InstantAccessSavingsAccountActivated")] async (InstantAccessSavingsAccountActivated @event, IActorProxyFactory actorProxyFactory) =>
                         {
                             if (@event.AccountId != null)
                             {
@@ -70,7 +70,7 @@ namespace SavingsPlatform.Api.Api.Modules
                         });
 
             app.MapPost("v1/accounts/:handle-interestaccrued-event",
-                        [Topic("pubsub", "AccountInterestAccrued")] async (AccountInterestAccrued @event, IActorProxyFactory actorProxyFactory) =>
+                        [Topic("savingspubsub", "AccountInterestAccrued")] async (AccountInterestAccrued @event, IActorProxyFactory actorProxyFactory) =>
                         {
                             if (@event.AccountId != null)
                             {
@@ -83,7 +83,7 @@ namespace SavingsPlatform.Api.Api.Modules
                         });
 
             app.MapPost("/v1/commands",
-                        [Topic("pubsub", "Commands")] async (CloudEvent<JsonObject> evt) =>
+                        [Topic("savingspubsub", "Commands")] async (CloudEvent<JsonObject> evt) =>
                         {
                             if (evt != null && evt.Data != null)
                             {

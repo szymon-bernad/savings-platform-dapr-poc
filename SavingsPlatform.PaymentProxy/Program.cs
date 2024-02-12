@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using SavingsPlatform.Accounts.Config;
 using SavingsPlatform.PaymentProxy.Services;
 using Microsoft.AspNetCore.Http.Json;
+using SavingsPlatform.PaymentProxy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ jsonOptions.Converters.Add(new JsonStringEnumConverter());
 var daprHttpPort = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ?? throw new ApplicationException("DAPR_HTTP_PORT is not set as EnvVar");
 builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOptions); });
 builder.Services.AddOptions<SavingsAccountsStateStoreConfig>().Bind(builder.Configuration.GetSection("StateStore"));
+builder.Services.AddOptions<ProxyConfig>().Bind(builder.Configuration.GetSection("ProxyCfg"));
 builder.Services.AddScoped<IAccountExternalRefService, AccountExternalRefService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

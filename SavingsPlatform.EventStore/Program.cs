@@ -83,7 +83,7 @@ async Task HandleErrors(Func<Task> func, ILogger<Program> logger)
     }
 }
 app.MapPost("/v1/accounts/:handle-created-event",
-              [Topic("pubsub", "AccountCreated")] async (AccountCreated @event,
+              [Topic("savingspubsub", "AccountCreated")] async (AccountCreated @event,
                     SavingsPlatformEventStore store,
                     IOptions<DocumentStoreConfig> dsConfig,
                     ILogger<Program> logger) =>
@@ -97,7 +97,7 @@ app.MapPost("/v1/accounts/:handle-created-event",
               });
 
 app.MapPost("v1/accounts/:handle-debited-event",
-            [Topic("pubsub", "AccountDebited")] async (AccountDebited @event,
+            [Topic("savingspubsub", "AccountDebited")] async (AccountDebited @event,
                     SavingsPlatformEventStore store,
                     IOptions<DocumentStoreConfig> dsConfig,
                     ILogger<Program> logger) =>
@@ -111,7 +111,7 @@ app.MapPost("v1/accounts/:handle-debited-event",
             });
 
 app.MapPost("v1/accounts/:handle-credited-event",
-            [Topic("pubsub", "AccountCredited")] async (AccountCredited @event,
+            [Topic("savingspubsub", "AccountCredited")] async (AccountCredited @event,
                    SavingsPlatformEventStore store,
                    IOptions<DocumentStoreConfig> dsConfig,
                    ILogger<Program> logger) =>
@@ -131,6 +131,7 @@ app.MapGet("v1/savings-platform/{platformId:guid}",
         return Results.Ok(await store.GetPlatformOverview(platformId));
     });
 
+app.MapGet("/", () => Results.NoContent());
 app.MapSubscribeHandler();
 app.UseRouting();
 app.Run();

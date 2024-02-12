@@ -1,5 +1,4 @@
 ﻿using Marten;
-using Marten.Events;
 using SavingsPlatform.EventStore.Models;
 using IEvent = SavingsPlatform.Contracts.Accounts.Interfaces.IEvent;
 

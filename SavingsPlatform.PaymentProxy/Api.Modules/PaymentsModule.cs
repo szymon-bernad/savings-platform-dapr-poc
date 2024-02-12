@@ -1,6 +1,7 @@
 ﻿using Carter;
 using Dapr;
 using Dapr.Client;
+using Microsoft.Extensions.Options;
 using SavingsPlatform.Contracts.Accounts.Events;
 using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
@@ -14,8 +15,9 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
         public void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/v1/inbound-payment",
-                async (DaprClient daprClient,
+                async(DaprClient daprClient,
                        IAccountExternalRefService accountExternalRefService,
+                       IOptions<ProxyConfig> proxyCfg,
                        ProcessInboundPayment request) =>
                 {
                     var mapping = await accountExternalRefService.GetEntryByExternalRef(request.AccountRef);
@@ -32,8 +34,11 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
                             TransactionDate: request.TransactionDate,
                             null);
 
+                        var appName = proxyCfg?.Value?.SavingsPlatformAppName ??
+                            throw new ArgumentNullException(nameof(proxyCfg.Value.SavingsPlatformAppName));
+
                         await daprClient.InvokeMethodAsync<CreditAccount>(
-                            "dapr-savings-acc",
+                            appName,
                             "v1/settlement-account/:credit",
                             req);
 
@@ -47,7 +52,8 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
 
             app.MapPost("/v1/outbound-payment",
                 async (DaprClient daprClient,
-                       IAccountExternalRefService accountExternalRefService, 
+                       IAccountExternalRefService accountExternalRefService,
+                       IOptions<ProxyConfig> proxyCfg,
                        ProcessOutboundPayment request) =>
                 {
                     var mapping = await accountExternalRefService.GetEntryByExternalRef(request.DebtorAccountRef);
@@ -66,8 +72,10 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
                             TransactionDate: request.TransactionDate,
                             null);
 
+                        var appName = proxyCfg?.Value?.SavingsPlatformAppName ??
+                            throw new ArgumentNullException(nameof(proxyCfg.Value.SavingsPlatformAppName));
                         await daprClient.InvokeMethodAsync<DebitAccount>(
-                            "dapr-savings-acc",
+                            appName,
                             "v1/settlement-account/:debit",
                             req);
 
@@ -80,7 +88,7 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
                 });
 
             app.MapPost("/v1/accounts/:handle-created-event",
-              [Topic("pubsub", "AccountCreated")] async (AccountCreated evt, IAccountExternalRefService svc) =>
+              [Topic("savingspubsub", "accountcreated")] async (AccountCreated evt, IAccountExternalRefService svc) =>
               {
                   if (evt != null)
                   {
