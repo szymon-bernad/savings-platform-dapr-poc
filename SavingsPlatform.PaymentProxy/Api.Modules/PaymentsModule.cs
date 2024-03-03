@@ -88,7 +88,7 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
                 });
 
             app.MapPost("/v1/accounts/:handle-created-event",
-              [Topic("savingspubsub", "accountcreated")] async (AccountCreated evt, IAccountExternalRefService svc) =>
+              [Topic("pubsub", "accountcreated")] async (AccountCreated evt, IAccountExternalRefService svc) =>
               {
                   if (evt != null)
                   {

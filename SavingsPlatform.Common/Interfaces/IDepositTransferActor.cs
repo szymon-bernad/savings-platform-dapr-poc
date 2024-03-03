@@ -11,5 +11,7 @@ namespace SavingsPlatform.Common.Interfaces
 
         public Task HandleCreditedEventAsync();
 
+        public Task HandleStartAfterAccountCreation(string savingsAccountId, string settlementAccountId);
+
     }
 }

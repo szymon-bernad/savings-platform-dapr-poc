@@ -12,5 +12,6 @@ namespace SavingsPlatform.Contracts.Accounts.Events
         public AccountType AccountType { get; set; }
         public DateTime Timestamp { get; set; }
         public string? EventType { get; set; }
+        public string? TransferId { get; set; }
     }
 }

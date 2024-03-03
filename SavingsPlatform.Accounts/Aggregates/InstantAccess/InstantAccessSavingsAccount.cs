@@ -53,6 +53,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                     AccountId = accountId,
                     AccountType = AccountType.SavingsAccount,
                     Timestamp = DateTime.UtcNow,
+                    TransferId = request.TransferId,
                     EventType = typeof(AccountCreated).Name
                 }
             };

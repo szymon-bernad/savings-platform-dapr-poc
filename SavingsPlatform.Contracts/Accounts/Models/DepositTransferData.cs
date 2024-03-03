@@ -21,5 +21,7 @@ namespace SavingsPlatform.Contracts.Accounts.Models
         public TransferDirection Direction { get; init; } = TransferDirection.ToSavingsAccount;
 
         public bool IsFirstAttempt { get; init; } = true;
+
+        public bool WaitForAccountCreation { get; init; } = false;
     }
 }

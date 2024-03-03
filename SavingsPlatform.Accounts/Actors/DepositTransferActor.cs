@@ -1,5 +1,4 @@
 ﻿using Dapr.Actors.Runtime;
-using Dapr.Client;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Aggregates.Settlement;
@@ -33,9 +32,30 @@ namespace SavingsPlatform.Accounts.Actors
             _daprClient = daprClient;
         }
 
-        public async Task InitiateTransferAsync(DepositTransferData data)
+        public Task InitiateTransferAsync(DepositTransferData data)
         {
-            await StartTransfer(data);
+            if (data.WaitForAccountCreation)
+            {
+                data = data with { Status = DepositTransferStatus.AwaitingAccountCreation };
+                return StateManager.SetStateAsync(DepositTransferState, data);
+            }
+            else
+            {
+                return StartTransfer(data);
+            }
+        }
+
+        public async Task HandleStartAfterAccountCreation(string savingsAccountId, string settlementAccountId)
+        {
+            var transferData = await StateManager.GetStateAsync<DepositTransferData>(DepositTransferState);
+            transferData = transferData with
+            {
+                DebtorAccountId = transferData.Direction == TransferDirection.FromSavingsAccount ? savingsAccountId : settlementAccountId,
+                BeneficiaryAccountId = transferData.Direction == TransferDirection.ToSavingsAccount ? savingsAccountId : settlementAccountId,
+                WaitForAccountCreation = false,
+            };
+
+            await StartTransfer(transferData);
         }
 
         private Task StartTransfer(DepositTransferData transferData)
@@ -47,6 +67,8 @@ namespace SavingsPlatform.Accounts.Actors
                 _ => throw new InvalidOperationException("Unsupported Transfer.")
             };
         }
+
+
 
         private async Task StartTransferFromSettlementToSavings(DepositTransferData transferData)
         {

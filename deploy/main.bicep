@@ -256,7 +256,7 @@ resource statestoreDaprComponent 'Microsoft.App/managedEnvironments/daprComponen
 
 //pubsub Service Bus Component
 resource pubsubServicebusDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-03-01' = {
-  name: '${environmentName}/savingspubsub'
+  name: '${environmentName}/pubsub'
   dependsOn: [
     environment
   ]

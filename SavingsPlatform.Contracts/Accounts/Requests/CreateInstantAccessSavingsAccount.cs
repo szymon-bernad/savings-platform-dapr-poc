@@ -3,5 +3,6 @@
     public record CreateInstantAccessSavingsAccount(
         string ExternalRef,
         decimal InterestRate,
-        string SettlementAccountRef);
+        string SettlementAccountRef,
+        string? TransferId);
 }
