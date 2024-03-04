@@ -174,7 +174,7 @@ namespace SavingsPlatform.Accounts.Actors
                 {
                     var settlementAccount = await _settlementAccountFactory.GetInstanceAsync(transferData.BeneficiaryAccountId);
                     await _daprClient.InvokeMethodAsync<ProcessOutboundPayment>(
-                        "dapr-payment-proxy",
+                        "sp-poc-paymentproxy",
                         "v1/outbound-payment",
                         new ProcessOutboundPayment(":unknown:", settlementAccount.State!.ExternalRef, transferData.Amount, DateTime.UtcNow, transferData.TransactionId));
 

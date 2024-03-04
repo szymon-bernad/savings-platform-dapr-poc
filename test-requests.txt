@@ -1,23 +1,23 @@
 {
-  "transactionId": "qwertyz41",
-  "type": "CreateNew",
-  "details": {
-"externalRef" : "2023-12-16-test04",
- "interestRate" : 6.03,
-"settlementAccountRef" : "main-settle-acc"
-
-  }
-}
-
-===
-{
-  "transactionId": "qwertyz42",
-  "type": "Transfer",
-  "details": {
-"savingsAccountRef" : "2023-12-16-test104",
-"amount": 6500.00,
-"direction": "ToSavingsAccount",
-"transactionDate": "2023-12-16T15:35:00.000Z"
-
-  }
+  "fileName": "qaz111",
+  "requests": [
+    {
+      "transactionId": "txn100",
+      "externalRef": "2023-03-03-tst-605",
+      "type": "CreateNew",
+      "details": {
+        "InterestRate": "6.05",
+        "SettlementAccountRef": "settled-af"
+      }
+    },
+    {
+      "transactionId": "txn101",
+      "externalRef": "2023-03-03-tst-605",
+      "type": "Transfer",
+      "details": {
+        "TransferDirection": "ToSavingsAccount",
+        "TransferAmount": "15500"
+      }
+    }
+  ]
 }
