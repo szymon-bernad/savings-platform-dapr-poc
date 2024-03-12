@@ -131,7 +131,7 @@ app.MapGet("v1/savings-platform/{platformId:guid}",
         return Results.Ok(await store.GetPlatformOverview(platformId));
     });
 
-app.MapGet("/", () => Results.NoContent());
+app.MapGet("/", () => Results.LocalRedirect("~/swagger"));
 app.MapSubscribeHandler();
 app.UseRouting();
 app.Run();

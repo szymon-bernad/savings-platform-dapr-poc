@@ -1,16 +1,16 @@
 param appname string = 'savingsplatform'
 param location string = resourceGroup().location
 
-param spApiName string = 'savingsplatform-poc-api'
-param spApiImage string = '${containerRegistry}/${spApiName}:0.1'
+param spApiName string = 'savings-platform-poc-api'
+param spApiImage string = '${containerRegistry}/${spApiName}'
 param backendApiPort int = 80
 
-param spEventStoreName string = 'savingsplatform-poc-eventstore'
-param spEventStoreImage string = '${containerRegistry}/${spEventStoreName}:0.2'
+param spEventStoreName string = 'savings-platform-poc-eventstore'
+param spEventStoreImage string = '${containerRegistry}/${spEventStoreName}'
 param eventStoreApiPort int = 80
 
 param spPaymentProxyName string = 'sp-poc-paymentproxy'
-param spPaymentProxyImage string = '${containerRegistry}/savings-platform-poc-paymentproxy:0.2'
+param spPaymentProxyImage string = '${containerRegistry}/savings-platform-poc-paymentproxy'
 
 param containerRegistry string = ''
 param containerRegistryUsername string = ''
@@ -21,9 +21,17 @@ param serviceBusResGroup string = ''
 param containerRegistryPassword string = ''
 param registryPassName string = 'registry-password'
 
+@secure()
+param pgConnString string = ''
+
+@secure()
+param pgDocStoreString string = ''
+
 var environmentName = '${appname}-env'
 
-
+param apiImgVer string = ''
+param eventStoreImgVer string = ''
+param payProxyImgVer string = ''
 
 //Reference to ServiceBus resource
 resource serviceBusResource 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = {
@@ -59,7 +67,7 @@ module spApiApp 'container-app.bicep' = {
     location: location
     environmentId: environment.outputs.acaEnvironmentId
     containerAppName: spApiName
-    containerImage: spApiImage
+    containerImage: '${spApiImage}:${apiImgVer}'
     targetPort: backendApiPort
     isPrivateRegistry: true
     minReplicas: 1
@@ -91,7 +99,11 @@ module spApiApp 'container-app.bicep' = {
       {
         name: 'StateStore__StateStoreName'
         value: 'statestore-postgres'
-      } 
+      }
+	  {
+        name: 'ServicesConfig__PaymentProxyServiceName'
+        value: spPaymentProxyName
+      }
     ]
   }
 }
@@ -108,7 +120,7 @@ module spEventStoreApp 'container-app.bicep' = {
     location: location
     environmentId: environment.outputs.acaEnvironmentId
     containerAppName: spEventStoreName
-    containerImage: spEventStoreImage
+    containerImage: '${spEventStoreImage}:${eventStoreImgVer}'
     targetPort: eventStoreApiPort
     isPrivateRegistry: true
     minReplicas: 1
@@ -131,7 +143,7 @@ module spEventStoreApp 'container-app.bicep' = {
       }
       {
          name: 'ConnectionStrings__DocumentStore'
-         value: ''
+         value: pgDocStoreString
       }
       {
          name: 'DocumentStoreConfig__PlatformId'
@@ -174,7 +186,7 @@ module redisApp 'container-app.bicep' = {
 }
 
 
-// SavingPlatform EventStore App
+// SavingPlatform PaymentProxy App
 module spPaymentProxyApp 'container-app.bicep' = {
   name: '${deployment().name}--${spPaymentProxyName}'
   dependsOn: [
@@ -186,7 +198,7 @@ module spPaymentProxyApp 'container-app.bicep' = {
     location: location
     environmentId: environment.outputs.acaEnvironmentId
     containerAppName: spPaymentProxyName
-    containerImage: spPaymentProxyImage
+    containerImage: '${spPaymentProxyImage}:${payProxyImgVer}'
     targetPort: 80
     isPrivateRegistry: true
     minReplicas: 1
@@ -235,7 +247,7 @@ resource statestoreDaprComponent 'Microsoft.App/managedEnvironments/daprComponen
     secrets: [
       {
         name: 'pg-conn'
-        value: ''
+        value: pgConnString
       }
     ]
     metadata: [
