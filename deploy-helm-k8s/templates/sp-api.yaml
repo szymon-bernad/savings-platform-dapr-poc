@@ -1,0 +1,102 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: savings-platform-api-cm
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc
+    service: savings-platform-api
+data:
+  DAPR_HTTP_PORT: "3500"
+  SimulationConfig__SpeedMultiplier: "1"
+  NAMESPACE: {{ .Values.namespace }}
+  StateStore__StateStoreName: {{ .Values.spStateStoreName }}
+  ServicesConfig__PaymentProxyServiceName: {{ .Values.spPaymentProxyName }}
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: savings-platform-api-dpl
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc 
+    service: savings-platform-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: savings-platform-api
+  template:
+    metadata:
+      labels:
+        app: savings-platform-poc
+        service: savings-platform-api
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "savings-platform-api"
+        dapr.io/app-port: "80"
+    spec:
+      containers:
+      - name: savings-platform-api
+        image: maincntnrreg1.azurecr.io/savings-platform-poc-api:0.10
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 80
+            protocol: TCP
+        envFrom:
+          - configMapRef:
+              name: savings-platform-api-cm
+      imagePullSecrets:
+      - name: acr-reg-scrt
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: savings-platform-api
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc 
+    service: savings-platform-api
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 3500
+      targetPort: 3500
+      protocol: TCP
+      name: dapr-http
+  selector:
+    service: savings-platform-api
+    
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: savings-platform-api-ingress
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc 
+    service: savings-platform-api
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: localhost
+    http:
+      paths: 
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: savings-platform-api
+            port: 
+              number: 80

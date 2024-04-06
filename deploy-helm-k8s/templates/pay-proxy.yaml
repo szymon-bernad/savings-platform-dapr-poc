@@ -1,0 +1,103 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: pay-proxy-api-cm
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc
+    service: pay-proxy-api
+data:
+  DAPR_HTTP_PORT: "3500"
+  NAMESPACE: {{ .Values.namespace }}
+  StateStore__StateStoreName: {{ .Values.spStateStoreName }}
+  ASPNETCORE_ENVIRONMENT: Development
+  StateStore__StateStoreName: statestore-payments
+  ProxyCfg__SavingsPlatformAppName: savings-platform-api
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: pay-proxy-api-dpl
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc 
+    service: pay-proxy-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: pay-proxy-api
+  template:
+    metadata:
+      labels:
+        app: savings-platform-poc
+        service: pay-proxy-api
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "pay-proxy-api"
+        dapr.io/app-port: "80"
+    spec:
+      containers:
+      - name: pay-proxy-api
+        image: maincntnrreg1.azurecr.io/savings-platform-poc-paymentproxy:0.10
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 80
+            protocol: TCP
+        envFrom:
+          - configMapRef:
+              name: pay-proxy-api-cm
+      imagePullSecrets:
+      - name: acr-reg-scrt
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: pay-proxy-api
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc 
+    service: pay-proxy-api
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 3500
+      targetPort: 3500
+      protocol: TCP
+      name: dapr-http
+  selector:
+    service: pay-proxy-api
+    
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pay-proxy-api-ingress
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc 
+    service: pay-proxy-api
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: localhost
+    http:
+      paths: 
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pay-proxy-api
+            port: 
+              number: 80

@@ -1,0 +1,15 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore-payments
+  namespace: {{ .Values.namespace }}
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+  # Connection string
+  - name: redisHost
+    value: redis:6379
+  # Timeout for database operations, in seconds (optional)
+  - name: timeoutInSeconds
+    value: 60
