@@ -19,6 +19,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SavingsPlatform.PaymentProx
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SavingsPlatform.Contracts", "SavingsPlatform.Contracts\SavingsPlatform.Contracts.csproj", "{43CA322B-D289-47E7-89A4-6F4FDA3ABD6E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{2C94652A-869C-4FC5-A9A2-F355D7E04F09}"
+	ProjectSection(SolutionItems) = preProject
+		acaenv.bicep = acaenv.bicep
+		cntnrApp.bicep = cntnrApp.bicep
+		loganalytics.bicep = loganalytics.bicep
+		main.bicep = main.bicep
+		main.params.bicepparam = main.params.bicepparam
+		postgres-dev.bicep = postgres-dev.bicep
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

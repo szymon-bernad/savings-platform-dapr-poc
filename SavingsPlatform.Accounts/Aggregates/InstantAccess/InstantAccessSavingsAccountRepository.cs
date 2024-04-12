@@ -25,10 +25,19 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
         {
         }
 
-        protected override string GetFilterQuery(string keyName, string keyValue)
+        protected override string GetFilterQuery(string keyName, string keyValue, bool isKeyValueAString = false)
         {
+            var keyValuePart = string.IsNullOrWhiteSpace(keyValue) ?
+                    "" :
+                    $"{{\"EQ\":{{\"{keyName}\":{(isKeyValueAString ? $"\"{keyValue}\"" : keyValue)}}}}},";
+
+            if (string.IsNullOrWhiteSpace(keyValuePart))
+            {
+                return base.GetFilterQuery("data.type", $"{(int)AccountType.SavingsAccount}", false);
+            }
+
             return $"{{\"filter\":{{\"AND\":[" +
-                $"{{\"EQ\":{{\"{keyName}\":\"{keyValue}\"}}}}," +
+                keyValuePart +
                 $"{{\"EQ\":{{\"data.type\":{(int)AccountType.SavingsAccount}}}}}" +
                 $"]}}}}";
         }

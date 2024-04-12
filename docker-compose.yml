@@ -35,7 +35,7 @@ services:
       context: .
       dockerfile: ./SavingsPlatform.Api/Dockerfile
     depends_on:
-      - postgres
+     # - postgres
       - placement
       - rabbitmq 
 
@@ -50,7 +50,7 @@ services:
       context: .
       dockerfile: ./SavingsPlatform.EventStore/Dockerfile
     depends_on:
-      - postgres
+    #  - postgres
       - placement
       - rabbitmq 
 

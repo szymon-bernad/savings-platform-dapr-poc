@@ -20,8 +20,4 @@
     <ProjectReference Include="..\SavingsPlatform.Common\SavingsPlatform.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Aggregates\Common\" />
-  </ItemGroup>
-
 </Project>

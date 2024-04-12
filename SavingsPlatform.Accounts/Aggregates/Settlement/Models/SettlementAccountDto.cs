@@ -13,5 +13,6 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement.Models
         DateTime? OpenedOn,
         decimal TotalBalance,
         Guid? LastTransactionId,
+        string? PlatformId,
         AccountType Type = AccountType.SettlementAccount);
 }

@@ -14,6 +14,7 @@ namespace SavingsPlatform.Contracts.Accounts.Events
         decimal Amount,
         string? TransferId,
         DateTime Timestamp,
-        string EventType) : IEvent;
+        string EventType,
+        string? PlatformId) : IEvent;
 
 }

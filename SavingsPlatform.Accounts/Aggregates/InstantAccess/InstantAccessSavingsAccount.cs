@@ -1,13 +1,11 @@
-﻿using Microsoft.Extensions.Options;
-using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
-using SavingsPlatform.Contracts.Accounts.Requests;
+﻿using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Common.Accounts;
 using SavingsPlatform.Common.Config;
-using SavingsPlatform.Contracts.Accounts.Events;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Events;
+using SavingsPlatform.Contracts.Accounts.Requests;
 using System.Collections.ObjectModel;
 
 namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
@@ -54,7 +52,8 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                     AccountType = AccountType.SavingsAccount,
                     Timestamp = DateTime.UtcNow,
                     TransferId = request.TransferId,
-                    EventType = typeof(AccountCreated).Name
+                    EventType = typeof(AccountCreated).Name,
+                    PlatformId = request.PlatformId ?? string.Empty,
                 }
             };
 
@@ -68,6 +67,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                 TotalBalance = 0m,
                 AccruedInterest = 0m,
                 Etag = null,
+                PlatformId = request.PlatformId,
                 HasUnpublishedEvents = true,
                 UnpublishedEvents = Enumerable.Cast<object>(eventsToPub).ToList()
             };
@@ -103,7 +103,8 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                         request.Amount,
                         _state.InterestRate,
                         DateTime.UtcNow,
-                        typeof(InstantAccessSavingsAccountActivated)!.Name));
+                        typeof(InstantAccessSavingsAccountActivated)!.Name,
+                        _state.PlatformId));
             }
 
             eventsToPublish.Add(new AccountCredited(
@@ -113,7 +114,8 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                     request.Amount,
                     request.TransferId,
                     DateTime.UtcNow,
-                    typeof(AccountCredited)!.Name));
+                    typeof(AccountCredited)!.Name,
+                    _state.PlatformId));
 
             _state = _state with
             {
@@ -151,7 +153,8 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                         request.Amount,
                         request.TransferId,
                         DateTime.UtcNow,
-                        typeof(AccountDebited)!.Name)
+                        typeof(AccountDebited)!.Name,
+                        _state.PlatformId)
                 }
             };
 
@@ -188,7 +191,8 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                             _state.TotalBalance,
                             _state.InterestRate,
                             DateTime.UtcNow,
-                            typeof(AccountInterestAccrued)!.Name)
+                            typeof(AccountInterestAccrued)!.Name,
+                            _state.PlatformId)
                     };
 
                     _state = _state with
@@ -233,7 +237,8 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                         _state.TotalBalance + _state.AccruedInterest,
                         _state.InterestRate,
                         DateTime.UtcNow,
-                        typeof(AccountInterestAccrued)!.Name));
+                        typeof(AccountInterestAccrued)!.Name,
+                        _state.PlatformId));
 
                 _state = _state with
                 {

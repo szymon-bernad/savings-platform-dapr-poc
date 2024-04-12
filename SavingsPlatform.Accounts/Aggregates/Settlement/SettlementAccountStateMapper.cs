@@ -22,6 +22,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                 OpenedOn = state.Data.OpenedOn,
                 TotalBalance = state.Data!.TotalBalance,
                 LastTransactionId = state.Data.LastTransactionId,
+                PlatformId = state.Data.PlatformId ?? string.Empty,
                 HasUnpublishedEvents = state.HasUnpublishedEvents,
                 UnpublishedEvents = unpubEvents
             };
@@ -31,7 +32,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
         {
             return new AggregateState<SettlementAccountDto>
             {
-                Data = new SettlementAccountDto(dto.Key, dto.ExternalRef, dto.OpenedOn, dto.TotalBalance, dto.LastTransactionId, dto.Type),
+                Data = new SettlementAccountDto(dto.Key, dto.ExternalRef, dto.OpenedOn, dto.TotalBalance, dto.LastTransactionId, dto.PlatformId, dto.Type),
                 HasUnpublishedEvents = dto.HasUnpublishedEvents,
                 UnpublishedEventsJson = dto.UnpublishedEvents?.Any() ?? false ?
                     JsonSerializer.Serialize(Enumerable.Cast<object>(dto.UnpublishedEvents)) : null

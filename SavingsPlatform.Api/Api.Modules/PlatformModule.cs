@@ -107,6 +107,15 @@ namespace SavingsPlatform.Api.Api.Modules
 
                             await Task.Delay(250);
                         });
+
+            app.MapGet("/v1/platforms/:get-ids",
+                        async (IStateEntryRepository<SettlementAccountState> repo) =>
+                        {
+                            var platformIds = (await repo.QueryAccountsByKeyAsync("data.type", string.Empty))
+                                        .Select(acc => acc.PlatformId)
+                                        .Distinct();
+                            return Results.Ok(platformIds);
+                        });
         }
     }
 }

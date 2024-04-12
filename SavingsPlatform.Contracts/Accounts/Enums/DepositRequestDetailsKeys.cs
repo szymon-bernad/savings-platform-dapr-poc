@@ -13,5 +13,7 @@ namespace SavingsPlatform.Contracts.Accounts.Enums
         public const string InterestRate = nameof(InterestRate);
         
         public const string SettlementAccountRef = nameof(SettlementAccountRef);
+
+        public const string PlatformId = nameof(PlatformId);
     }
 }

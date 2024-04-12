@@ -35,18 +35,23 @@ namespace SavingsPlatform.Api.Api.Modules
             });
 
             app.MapPost("v1/savings-accounts/:process-file",
-                async (IMediator mediator, DepositRequestsFile request) =>
+                async (IMediator mediator, 
+                       DepositRequestsFile request,
+                       IStateEntryRepository<SettlementAccountState> repo) =>
                 {
+
                     if (request?.Requests?.Any() ?? false)
-                    {
-                        var requestsGrouped = request.Requests.GroupBy(r => r.ExternalRef);
+                        {
+                            var requestsGrouped = request.Requests.GroupBy(r => r.ExternalRef);
 
-                        await Task.WhenAll(requestsGrouped.Select(g => this.ProcessRequestGroup(mediator, g.ToList())));
-                    }
-                });
-        }
+                            await Task.WhenAll(requestsGrouped.Select(g => this.ProcessRequestGroup(mediator, g.ToList(), repo)));
+                        }
+                    });
+                }
 
-        private async Task ProcessRequestGroup(IMediator mediator, ICollection<DepositRequest> requestGroup)
+        private async Task ProcessRequestGroup(IMediator mediator, 
+                                               ICollection<DepositRequest> requestGroup,
+                                               IStateEntryRepository<SettlementAccountState> repo)
         {
             if (!(requestGroup?.Any() ?? false))
             {
@@ -73,7 +78,7 @@ namespace SavingsPlatform.Api.Api.Modules
             var createReq = createNewReqs.FirstOrDefault();
             if (createReq is not null)
             {
-                await ProcessCreateRequest(mediator, createReq, transferId);
+                await ProcessCreateRequest(mediator, createReq, transferId, repo);
             }
 
             var transferReq = transferReqs.FirstOrDefault();
@@ -117,7 +122,10 @@ namespace SavingsPlatform.Api.Api.Modules
             await mediator.Send(transferCmd);
         }
 
-        private async Task ProcessCreateRequest(IMediator mediator, DepositRequest request, string? transferId)
+        private async Task ProcessCreateRequest(IMediator mediator, 
+                                                DepositRequest request,
+                                                string? transferId,
+                                                IStateEntryRepository<SettlementAccountState> repo)
         {
             request.Details!.TryGetValue(DepositRequestDetailsKeys.SettlementAccountRef, out var settlementAccRef);
             if (settlementAccRef is null)
@@ -125,8 +133,11 @@ namespace SavingsPlatform.Api.Api.Modules
                 throw new InvalidOperationException($"SettlementAccountRef is required for CreateNew request for ExternalRef = {request.ExternalRef}.");
             }
 
-            var interestRate = 0m;
+            var platformId = (await repo.QueryAccountsByKeyAsync("data.externalRef", settlementAccRef))
+                                .FirstOrDefault()?.PlatformId ??
+                                    string.Empty;
             request.Details!.TryGetValue(DepositRequestDetailsKeys.InterestRate, out var interestRateStr);
+            decimal interestRate;
             if (interestRateStr is null)
             {
                 throw new InvalidOperationException($"InterestRate is required for CreateNew request for ExternalRef = {request.ExternalRef}.");
@@ -140,6 +151,7 @@ namespace SavingsPlatform.Api.Api.Modules
                 request.ExternalRef,
                 interestRate,
                 settlementAccRef,
+                platformId,
                 transferId);
 
             await mediator.Send(createCmd);

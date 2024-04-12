@@ -32,6 +32,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                 ActivatedOn = state.Data.ActivatedOn,
                 TotalBalance = state.Data!.TotalBalance,
                 LastTransactionId = state.Data.LastTransactionId,
+                PlatformId = state.Data.PlatformId ?? string.Empty,
                 HasUnpublishedEvents = state.HasUnpublishedEvents,
                 InterestApplicationDueOn = state.Data.InterestApplicationDueOn,
                 UnpublishedEvents = unpubEvents
@@ -52,6 +53,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                     dto.TotalBalance,
                     dto.AccruedInterest,
                     dto.LastTransactionId,
+                    dto.PlatformId,
                     dto.InterestApplicationFrequency,
                     dto.InterestApplicationDueOn),
                 HasUnpublishedEvents = dto.HasUnpublishedEvents,

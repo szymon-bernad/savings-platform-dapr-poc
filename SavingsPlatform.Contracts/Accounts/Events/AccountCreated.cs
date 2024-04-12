@@ -3,15 +3,24 @@ using SavingsPlatform.Contracts.Accounts.Interfaces;
 
 namespace SavingsPlatform.Contracts.Accounts.Events
 {
-    public class AccountCreated : IEvent
+    public record AccountCreated : IEvent
     {
-        public string? Id { get; set; }
-        public string? ExternalRef { get; set; }
+        public required string Id { get; set; }
+
+        public required string ExternalRef { get; set; }
+
         public string? SettlementAccountRef { get; set; }
-        public string? AccountId { get; set; }
+
+        public string? PlatformId { get; set; } = string.Empty;
+
+        public required string AccountId { get; set; }
+
         public AccountType AccountType { get; set; }
+
         public DateTime Timestamp { get; set; }
-        public string? EventType { get; set; }
+
+        public required string EventType { get; set; }
+
         public string? TransferId { get; set; }
     }
 }

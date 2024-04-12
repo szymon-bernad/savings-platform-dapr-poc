@@ -11,5 +11,6 @@ namespace SavingsPlatform.Contracts.Accounts.Commands
         string ExternalRef,
         decimal InterestRate,
         string SettlementAccountRef,
+        string? PlatformId,
         string? TransferId) : IRequest;
 }
