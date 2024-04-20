@@ -1,0 +1,71 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: savings-platform-api-cm
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc
+    service: savings-platform-api
+data:
+  DAPR_HTTP_PORT: "3500"
+  SimulationConfig__SpeedMultiplier: "1"
+  NAMESPACE: {{ .Values.namespace }}
+  StateStore__StateStoreName: {{ .Values.spStateStoreName }}
+  ServicesConfig__PaymentProxyServiceName: {{ .Values.spPaymentProxyName }}
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: savings-platform-api-dpl
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc 
+    service: savings-platform-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: savings-platform-api
+  template:
+    metadata:
+      labels:
+        app: savings-platform-poc
+        service: savings-platform-api
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "savings-platform-api"
+        dapr.io/app-port: "80"
+    spec:
+      containers:
+      - name: savings-platform-api
+        image: maincntnrreg1.azurecr.io/savings-platform-poc-api:0.10
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 80
+            protocol: TCP
+        envFrom:
+          - configMapRef:
+              name: savings-platform-api-cm
+      imagePullSecrets:
+      - name: acr-reg-scrt
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: savings-platform-api-lb
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc 
+    service: savings-platform-api
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    service: savings-platform-api

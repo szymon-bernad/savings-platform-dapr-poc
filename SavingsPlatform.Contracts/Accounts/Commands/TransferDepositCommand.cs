@@ -12,6 +12,8 @@ namespace SavingsPlatform.Contracts.Accounts.Commands
         string SavingsAccountRef,
         DateTime TransactionDate,
         decimal Amount,
-        TransferDirection Direction
+        TransferDirection Direction,
+        string? TransferId,
+        bool WaitForAccountCreation = false
         ) : IRequest;
 }

@@ -16,22 +16,27 @@ namespace SavingsPlatform.EventStore
             this._logger = logger;
         }
 
-        public async Task AppendEvents(Guid platformId, IEnumerable<IEvent> events)
+        public async Task AppendEvents(IEnumerable<IEvent> events)
         {
             try
             {
                 using var session = _documentStore.LightweightSession(System.Data.IsolationLevel.ReadCommitted);
-                var streamState = await session.Events.FetchStreamAsync(platformId);
-                if (streamState != null)
+                var groupedByPlatformId = events.GroupBy(evt => evt.PlatformId);
+                foreach (var evtGroup in groupedByPlatformId)
                 {
-                    session.Events.Append(platformId, events);
-                }
-                else
-                {
-                    session.Events.StartStream<SavingsPlatformOverview>(platformId, events);
-                }
+                    var streamId = Guid.Parse(evtGroup.Key);
+                    var streamState = await session.Events.FetchStreamAsync(streamId);
+                    if (streamState != null)
+                    {
+                        session.Events.Append(streamId, evtGroup.ToArray());
+                    }
+                    else
+                    {
+                        session.Events.StartStream<SavingsPlatformOverview>(streamId, evtGroup.ToArray());
+                    }
 
-                await session.SaveChangesAsync();
+                    await session.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {

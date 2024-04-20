@@ -2,10 +2,10 @@ apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
   name: pubsub
+  namespace: {{ .Values.namespace }}
 spec:
   type: pubsub.rabbitmq
   version: v1
-  initTimeout: "75s"
   metadata:
   - name: host
     value: "amqp://rabbitmq:5672"
@@ -16,6 +16,6 @@ spec:
   - name: autoAck
     value: "false"
   - name: reconnectWait
-    value: "45s"
+    value: "5"
   - name: concurrency
     value: parallel

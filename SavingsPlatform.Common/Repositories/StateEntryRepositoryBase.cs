@@ -75,7 +75,7 @@ namespace SavingsPlatform.Common.Repositories
             return false;
         }
 
-        public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string keyName, string keyValue)
+        public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string keyName, string keyValue, bool isKeyValueAString = true)
         {
             var filter = GetFilterQuery(keyName, keyValue);
             var result = await _daprClient.QueryStateAsync<AggregateState<TData>>(
@@ -99,9 +99,11 @@ namespace SavingsPlatform.Common.Repositories
             return Enumerable.Empty<TEntry>().ToList();
         }
 
-        protected virtual string GetFilterQuery(string keyName, string keyValue)
+        protected virtual string GetFilterQuery(string keyName, string keyValue, bool isKeyValueAString = true)
         {
-            return $"{{\"filter\":{{\"EQ\":{{\"{keyName}\":\"{keyValue}\"}}}}}}";
+            return isKeyValueAString ?
+                $"{{\"filter\":{{\"EQ\":{{\"{keyName}\":\"{keyValue}\"}}}}}}" :
+                $"{{\"filter\":{{\"EQ\":{{\"{keyName}\":{keyValue}}}}}}}";
         }
         protected async Task<bool> PostToStateStoreAsync(TEntry entry)
         {

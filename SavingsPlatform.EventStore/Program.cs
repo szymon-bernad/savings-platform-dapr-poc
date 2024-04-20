@@ -20,6 +20,16 @@ builder.Services.AddSwaggerGen();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddOptions<DocumentStoreConfig>().BindConfiguration(nameof(DocumentStoreConfig));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "AllowAll",
+                      policy =>
+                      {
+                          policy.WithOrigins("*")
+                                .WithMethods("GET", "OPTIONS");
+                      });
+});
+
 builder.Services.AddMarten(options =>
 {
     options.Connection(builder.Configuration.GetConnectionString("DocumentStore") 
@@ -66,7 +76,7 @@ Polly.Retry.AsyncRetryPolicy retryPolicy = Policy
     .Handle<Exception>()
     .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromMilliseconds(rand.NextDouble() * 100 + 50));
 
-async Task HandleErrors(Func<Task> func, ILogger<Program> logger)
+async Task RunAndHandleErrors(Func<Task> func, ILogger<Program> logger)
 {
     try
     {
@@ -82,44 +92,55 @@ async Task HandleErrors(Func<Task> func, ILogger<Program> logger)
         throw;
     }
 }
+
+Guid GetPlatformId(string? platformId, IOptions<DocumentStoreConfig> dsConfig)
+{
+    platformId = string.IsNullOrWhiteSpace(platformId) ? 
+        dsConfig?.Value?.PlatformId 
+        : platformId;
+
+    if (platformId is null)
+        throw new NullReferenceException(nameof(DocumentStoreConfig));
+
+    return Guid.Parse(platformId);
+}
+
 app.MapPost("/v1/accounts/:handle-created-event",
-              [Topic("savingspubsub", "AccountCreated")] async (AccountCreated @event,
+              [Topic("pubsub", "accountcreated")] async (AccountCreated @event,
                     SavingsPlatformEventStore store,
                     IOptions<DocumentStoreConfig> dsConfig,
                     ILogger<Program> logger) =>
               {
                   logger.LogInformation($"AccountCreated: {@event}");
-                  var platformId = Guid.Parse(dsConfig.Value?.PlatformId ?? throw new NullReferenceException(nameof(DocumentStoreConfig)));
-                  logger.LogInformation($"PlatformId: {platformId}");
-                  await HandleErrors(async () => await store.AppendEvents(platformId, new[] { @event }), logger);
+                  var platformId = GetPlatformId(@event.PlatformId, dsConfig).ToString();
+
+                  await RunAndHandleErrors(async () => await store.AppendEvents(new[] { @event with { PlatformId = platformId } } ), logger);
 
                   return Results.Accepted();
               });
 
 app.MapPost("v1/accounts/:handle-debited-event",
-            [Topic("savingspubsub", "AccountDebited")] async (AccountDebited @event,
+            [Topic("pubsub", "accountdebited")] async (AccountDebited @event,
                     SavingsPlatformEventStore store,
                     IOptions<DocumentStoreConfig> dsConfig,
                     ILogger<Program> logger) =>
             {
                 logger.LogInformation($"AccountDebited: {@event}");
-                var platformId = Guid.Parse(dsConfig.Value?.PlatformId ?? throw new NullReferenceException(nameof(DocumentStoreConfig)));
-                logger.LogInformation($"PlatformId: {platformId}");
-                await HandleErrors(async () => await store.AppendEvents(platformId, new[] { @event }), logger);
+                var platformId = GetPlatformId(@event.PlatformId, dsConfig).ToString();
+                await RunAndHandleErrors(async () => await store.AppendEvents(new[] { @event with { PlatformId = platformId } }), logger);
 
                 return Results.Accepted();
             });
 
 app.MapPost("v1/accounts/:handle-credited-event",
-            [Topic("savingspubsub", "AccountCredited")] async (AccountCredited @event,
+            [Topic("pubsub", "accountcredited")] async (AccountCredited @event,
                    SavingsPlatformEventStore store,
                    IOptions<DocumentStoreConfig> dsConfig,
                    ILogger<Program> logger) =>
             {
                 logger.LogInformation($"AccountCredited: {@event}");
-                var platformId = Guid.Parse(dsConfig.Value?.PlatformId ?? throw new NullReferenceException(nameof(DocumentStoreConfig)));
-                logger.LogInformation($"PlatformId: {platformId}");
-                await HandleErrors(async () => await store.AppendEvents(platformId, new[] { @event }), logger);
+                var platformId = GetPlatformId(@event.PlatformId, dsConfig).ToString();
+                await RunAndHandleErrors(async () => await store.AppendEvents(new[] { @event with { PlatformId = platformId } }), logger);
 
                 return Results.Accepted();
             });
@@ -131,7 +152,9 @@ app.MapGet("v1/savings-platform/{platformId:guid}",
         return Results.Ok(await store.GetPlatformOverview(platformId));
     });
 
-app.MapGet("/", () => Results.NoContent());
+app.MapGet("/", () => Results.LocalRedirect("~/swagger"));
 app.MapSubscribeHandler();
 app.UseRouting();
+app.UseCors("AllowAll");
 app.Run();
+

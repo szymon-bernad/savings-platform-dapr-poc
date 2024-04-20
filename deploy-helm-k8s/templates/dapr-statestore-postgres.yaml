@@ -2,11 +2,10 @@ apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
   name: statestore-postgres
-  namespace: savingsplatform
+  namespace: {{ .Values.namespace }}
 spec:
   type: state.postgresql
   version: v1
-  initTimeout: "75s"
   metadata:
   # Connection string
   - name: connectionString
@@ -17,6 +16,3 @@ spec:
   # Uncomment this if you wish to use PostgreSQL as a state store for actors (optional)
   - name: actorStateStore
     value: "true"
-scopes:
-- dapr-savings-acc
-- dapr-savings-evt

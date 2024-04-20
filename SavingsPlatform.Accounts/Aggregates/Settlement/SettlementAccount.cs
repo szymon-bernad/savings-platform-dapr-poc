@@ -1,6 +1,7 @@
 ﻿using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Aggregates.Settlement.Models;
 using SavingsPlatform.Common.Accounts;
+using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Events;
@@ -38,7 +39,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
             }
 
             var accountId = Guid.NewGuid().ToString();
-
+            var platformId = GuidGenerator.AsGuid(accountId).ToString("N");
             await ThrowIfAlreadyExists(accountId, request.ExternalRef);
 
             var eventsToPub = new Collection<object>
@@ -49,6 +50,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                     ExternalRef = request.ExternalRef,
                     SettlementAccountRef = request.ExternalRef,
                     AccountId = accountId,
+                    PlatformId = platformId,
                     AccountType = AccountType.SettlementAccount,
                     Timestamp = DateTime.UtcNow,
                     EventType = typeof(AccountCreated).Name
@@ -63,6 +65,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                 OpenedOn = DateTime.UtcNow,
                 TotalBalance = decimal.Zero,
                 LastTransactionId = null,
+                PlatformId = platformId,
                 HasUnpublishedEvents = false,
                 UnpublishedEvents = Enumerable.Cast<object>(eventsToPub).ToList(),
             };
@@ -84,7 +87,9 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                         request.Amount,
                         request.TransferId,
                         DateTime.UtcNow,
-                        typeof(AccountCredited)!.Name)
+                        typeof(AccountCredited)!.Name,
+                        _state.Type,
+                        _state.PlatformId)
                 };
 
             _state.LastTransactionId = transactionId;
@@ -112,7 +117,9 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                     request.Amount,
                     request.TransferId,
                     DateTime.UtcNow,
-                    typeof(AccountDebited)!.Name)
+                    typeof(AccountDebited)!.Name,
+                    _state.Type,
+                    _state.PlatformId)
             };
 
             await TryUpdateAsync();

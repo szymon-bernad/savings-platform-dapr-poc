@@ -7,13 +7,17 @@ namespace SavingsPlatform.EventStore.Models
     {
         public Guid Id { get; set; }
 
-        public int TransfersTotalCount { get; set; } = 0;
-
         public decimal SavingsTotalAmount {  get; set; } = decimal.Zero;
 
-        public int SavingsAccountsCount { get; set; } = 0;
+        public decimal DailyInflowUntilNow { get; set; } = decimal.Zero;
 
-        public int TransfersPendingCount { get; set; } = 0;
+        public decimal DailyOutflowUntilNow { get; set; } = decimal.Zero;
+
+        public DateTime? LatestInflowDate { get; set; }
+
+        public DateTime? LatestOutflowDate { get; set; }
+
+        public int SavingsAccountsCount { get; set; } = 0;
 
         public HashSet<string> Transfers {  get; set; } = new HashSet<string>();
 
@@ -30,17 +34,39 @@ namespace SavingsPlatform.EventStore.Models
             if (!string.IsNullOrEmpty(evt.TransferId) && !Transfers.Contains(evt.TransferId))
             {
                 this.Transfers.Add(evt.TransferId);
-                this.TransfersTotalCount++;
+            }
+
+            if (evt.AccountType == AccountType.SavingsAccount)
+            {
                 this.SavingsTotalAmount += evt.Amount;
-                this.TransfersPendingCount--;
+
+                if (this.LatestInflowDate is null || this.LatestInflowDate.Value!.Date < evt.Timestamp.Date)
+                {
+                    this.DailyInflowUntilNow = evt.Amount;
+                }
+                else
+                {
+                    this.DailyInflowUntilNow += evt.Amount;
+                }
+                this.LatestInflowDate = evt.Timestamp;
             }
         }
 
         public void Apply(AccountDebited evt)
         {
-            if (!string.IsNullOrEmpty(evt.TransferId) && !Transfers.Contains(evt.TransferId))
+            if (evt.AccountType == AccountType.SavingsAccount)
             {
-                this.TransfersPendingCount++;
+                this.SavingsTotalAmount += evt.Amount;
+
+                if (this.LatestOutflowDate is null || this.LatestOutflowDate.Value!.Date < evt.Timestamp.Date)
+                {
+                    this.DailyOutflowUntilNow = evt.Amount;
+                }
+                else
+                {
+                    this.DailyOutflowUntilNow += evt.Amount;
+                }
+                this.LatestOutflowDate = evt.Timestamp;
             }
         }
     }

@@ -4,6 +4,7 @@ namespace SavingsPlatform.Contracts.Accounts.Requests
 {
     public record DepositRequest(
         string TransactionId,
+        string ExternalRef,
         DepositRequestType Type,
-        JsonObject? Details);
+        IDictionary<string, string>? Details);
 }

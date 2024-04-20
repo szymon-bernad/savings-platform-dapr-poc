@@ -18,6 +18,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         decimal TotalBalance,
         decimal AccruedInterest,
         Guid? LastTransactionId,
+        string? PlatformId,
         ProcessFrequency InterestApplicationFrequency = ProcessFrequency.Weekly,
         DateTime? InterestApplicationDueOn = null,
         AccountType Type = AccountType.SavingsAccount);

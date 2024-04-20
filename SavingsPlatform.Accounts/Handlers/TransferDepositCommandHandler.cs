@@ -32,22 +32,30 @@ namespace SavingsPlatform.Accounts.Handlers
 
         public async Task Handle(TransferDepositCommand request, CancellationToken cancellationToken)
         {
-            var transferId = Guid.NewGuid().ToString();
+            var transferId = request.TransferId ?? Guid.NewGuid().ToString();
             var actorInstance = _actorProxyFactory.CreateActorProxy<IDepositTransferActor>(
                 new ActorId(transferId),
                 nameof(DepositTransferActor));
-
-            var savingsAcc = await _iasaFactory.GetInstanceByExternalRefAsync(request.SavingsAccountRef);
-            var settlementAcc = await _settlementAccountFactory.GetInstanceByExternalRefAsync(savingsAcc.State!.SettlementAccountRef!);
 
             var dtData = new DepositTransferData
             {
                 Amount = request.Amount,
                 TransactionId = transferId,
-                DebtorAccountId = request.Direction == TransferDirection.FromSavingsAccount ? savingsAcc.State!.Key : settlementAcc.State!.Key,
-                BeneficiaryAccountId = request.Direction == TransferDirection.ToSavingsAccount ? savingsAcc.State!.Key : settlementAcc.State!.Key,
                 Direction = request.Direction,
+                WaitForAccountCreation = request.WaitForAccountCreation,
             };
+
+            if (!request.WaitForAccountCreation)
+            {
+                var savingsAcc = await _iasaFactory.GetInstanceByExternalRefAsync(request.SavingsAccountRef);
+                var settlementAcc = await _settlementAccountFactory.GetInstanceByExternalRefAsync(savingsAcc.State!.SettlementAccountRef!);
+
+                dtData = dtData with
+                {
+                    DebtorAccountId = request.Direction == TransferDirection.FromSavingsAccount ? savingsAcc.State!.Key : settlementAcc.State!.Key,
+                    BeneficiaryAccountId = request.Direction == TransferDirection.ToSavingsAccount ? savingsAcc.State!.Key : settlementAcc.State!.Key,
+                };
+            }
 
             await actorInstance.InitiateTransferAsync(dtData);
         }

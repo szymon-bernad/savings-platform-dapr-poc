@@ -1,0 +1,5 @@
+apiVersion: v2
+name: savings-platform-poc
+description: A savings-platform PoC Helm chart for k8s
+type: application
+version: 1.0.0

@@ -1,0 +1,46 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: redis
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc
+    service: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: redis
+  template:
+    metadata:
+      labels:
+        app: savings-platform-poc
+        service: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.2.4
+        imagePullPolicy: IfNotPresent
+        ports:
+          - name: http
+            containerPort: 6379
+            protocol: TCP
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: savings-platform-poc
+    service: redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    service: redis
