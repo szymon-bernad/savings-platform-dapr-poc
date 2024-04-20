@@ -88,6 +88,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                         request.TransferId,
                         DateTime.UtcNow,
                         typeof(AccountCredited)!.Name,
+                        _state.Type,
                         _state.PlatformId)
                 };
 
@@ -117,6 +118,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                     request.TransferId,
                     DateTime.UtcNow,
                     typeof(AccountDebited)!.Name,
+                    _state.Type,
                     _state.PlatformId)
             };
 

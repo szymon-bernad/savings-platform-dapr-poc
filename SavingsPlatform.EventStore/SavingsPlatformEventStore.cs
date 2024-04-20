@@ -24,14 +24,15 @@ namespace SavingsPlatform.EventStore
                 var groupedByPlatformId = events.GroupBy(evt => evt.PlatformId);
                 foreach (var evtGroup in groupedByPlatformId)
                 {
-                    var streamState = await session.Events.FetchStreamAsync(evtGroup.Key);
+                    var streamId = Guid.Parse(evtGroup.Key);
+                    var streamState = await session.Events.FetchStreamAsync(streamId);
                     if (streamState != null)
                     {
-                        session.Events.Append(evtGroup.Key, evtGroup.ToArray());
+                        session.Events.Append(streamId, evtGroup.ToArray());
                     }
                     else
                     {
-                        session.Events.StartStream<SavingsPlatformOverview>(evtGroup.Key, evtGroup.ToArray());
+                        session.Events.StartStream<SavingsPlatformOverview>(streamId, evtGroup.ToArray());
                     }
 
                     await session.SaveChangesAsync();

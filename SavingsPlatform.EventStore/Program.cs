@@ -20,6 +20,16 @@ builder.Services.AddSwaggerGen();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddOptions<DocumentStoreConfig>().BindConfiguration(nameof(DocumentStoreConfig));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "AllowAll",
+                      policy =>
+                      {
+                          policy.WithOrigins("*")
+                                .WithMethods("GET", "OPTIONS");
+                      });
+});
+
 builder.Services.AddMarten(options =>
 {
     options.Connection(builder.Configuration.GetConnectionString("DocumentStore") 
@@ -145,4 +155,6 @@ app.MapGet("v1/savings-platform/{platformId:guid}",
 app.MapGet("/", () => Results.LocalRedirect("~/swagger"));
 app.MapSubscribeHandler();
 app.UseRouting();
+app.UseCors("AllowAll");
 app.Run();
+

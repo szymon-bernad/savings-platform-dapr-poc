@@ -5,11 +5,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>..\savings-platform-dapr\SavingsPlatform.Common</DockerfileContext>
+    <DockerfileContext>.</DockerfileContext>
     <UserSecretsId>f0dc8491-25de-4491-9184-f91abc924220</UserSecretsId>
     <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
+	
+	
   <ItemGroup>
     <PackageReference Include="Carter" Version="7.2.0" />
     <PackageReference Include="Dapr.Actors" Version="1.12.0" />

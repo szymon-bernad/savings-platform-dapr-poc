@@ -5,6 +5,7 @@ metadata:
 spec:
   type: pubsub.rabbitmq
   version: v1
+  initTimeout: "75s"
   metadata:
   - name: host
     value: "amqp://rabbitmq:5672"
@@ -15,6 +16,6 @@ spec:
   - name: autoAck
     value: "false"
   - name: reconnectWait
-    value: "5"
+    value: "45s"
   - name: concurrency
     value: parallel

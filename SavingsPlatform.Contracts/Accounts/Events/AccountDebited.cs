@@ -1,4 +1,5 @@
-﻿using SavingsPlatform.Contracts.Accounts.Interfaces;
+﻿using SavingsPlatform.Contracts.Accounts.Enums;
+using SavingsPlatform.Contracts.Accounts.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,6 @@ namespace SavingsPlatform.Contracts.Accounts.Events
     string? TransferId,
     DateTime Timestamp,
     string EventType,
+    AccountType AccountType,
     string? PlatformId) : IEvent;
 }

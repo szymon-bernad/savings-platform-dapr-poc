@@ -20,6 +20,15 @@ builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOpti
 builder.Services.AddSavingsAccounts(builder.Configuration, Int32.Parse(daprHttpPort));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "AllowAll",
+                      policy =>
+                      {
+                          policy.WithOrigins("*")
+                                .WithMethods("GET", "OPTIONS");
+                      });
+});
 
 builder.Services.Configure<JsonOptions>(options =>
 {
@@ -54,5 +63,5 @@ app.MapCarter();
 app.MapSubscribeHandler();
 app.UseRouting();
 app.MapActorsHandlers();
-
+app.UseCors("AllowAll");
 app.Run();

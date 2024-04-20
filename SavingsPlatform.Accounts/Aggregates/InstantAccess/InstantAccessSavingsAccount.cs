@@ -115,6 +115,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                     request.TransferId,
                     DateTime.UtcNow,
                     typeof(AccountCredited)!.Name,
+                    _state.Type,
                     _state.PlatformId));
 
             _state = _state with
@@ -154,6 +155,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                         request.TransferId,
                         DateTime.UtcNow,
                         typeof(AccountDebited)!.Name,
+                        _state.Type,
                         _state.PlatformId)
                 }
             };
