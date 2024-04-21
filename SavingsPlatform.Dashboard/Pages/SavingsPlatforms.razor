@@ -1,0 +1,115 @@
+﻿@page "/savings-platforms"
+@inject HttpClient Http
+
+<PageTitle>Savings Platform</PageTitle>
+
+<h1>Platforms Dashboard</h1>
+
+<p>Welcome to Platforms Dashboard!</p>
+
+@if (!(PlatformIds?.Any() ?? false))
+{
+    <p><em >@LoadingMessage</em></p>
+}
+else
+{
+    <div>
+        <InputSelect @bind-Value="Model.PlatformId"
+            @bind-Value:after="OnPlatformIdChangedAsync"
+            DisplayName="Platforms:">
+            <options>--Select--</options>
+            @foreach (var platformId in PlatformIds!)
+            {
+                <option>@platformId</option>
+            }
+        </InputSelect>
+        @if(Model?.PlatformId is not null)
+        {
+            <table class="table">
+            <tbody>
+                <tr class="top-row">
+                <td colspan="1">
+                    <label class="label">Platform Id:</label>
+                </td>
+                        <td colspan="3" class="text-left"><span><strong>@Model!.PlatformId</strong></span></td>
+                </tr>
+                <tr>
+                    <td colspan="1" >
+                            <label class="label">Savings Total Amount:</label>
+                    </td>
+                        <td colspan="1"><span>@Model!.Platform?.SavingsTotalAmount</span></td>
+                    <td colspan="1">
+                            <label class="label">Savings Count:</label>
+                        </td>
+                        <td colspan="1"><span>@Model!.Platform?.SavingsAccountsCount</span></td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label class="label">Outflow until now:</label>
+                    </td>
+                    <td><span>@Model!.Platform?.DailyOutflowUntilNow</span></td>
+                    <td >
+                        <label class="label">Inflow until now:</label>
+                    </td>
+                    <td><span>@Model!.Platform?.DailyInflowUntilNow</span></td>
+                </tr>
+             </tbody>    
+            </table>
+        }
+
+    </div>
+}
+
+@code {
+    [SupplyParameterFromForm]
+    private Dashboard? Model { get; set; }
+
+    private ICollection<string>? PlatformIds;
+
+    private string LoadingMessage = "Loading...";
+
+    private const string BackEndBaseUrl = "http://localhost:5165/v1";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = new();
+        using var httpClient = new HttpClient();
+        try
+        {
+            PlatformIds = await httpClient.GetFromJsonAsync<string[]>($"{BackEndBaseUrl}/dashboard/platforms/:get-ids");
+        }
+        catch(Exception ex)
+        {
+            LoadingMessage = ex.Message;
+        }
+    }
+
+    protected async Task OnPlatformIdChangedAsync()
+    {
+        if (Model?.PlatformId is not null)
+        {
+            Model!.Platform = await Http.GetFromJsonAsync<Platform>($"{BackEndBaseUrl}/dashboard/platforms/{Model.PlatformId}");
+        }
+    }
+
+    // =================================================================================================
+
+    public class Dashboard
+    {
+        public string? PlatformId { get; set; } 
+
+        public Platform? Platform { get; set; }
+    }
+
+    public class Platform
+    {
+        public decimal SavingsTotalAmount { get; set; } = decimal.Zero;
+
+        public int SavingsAccountsCount { get; set; } = 0;
+
+        public decimal DailyInflowUntilNow { get; set; } = decimal.Zero;
+
+        public decimal DailyOutflowUntilNow { get; set; } = decimal.Zero;
+    }
+}

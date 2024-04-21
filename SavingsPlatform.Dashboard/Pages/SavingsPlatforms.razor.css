@@ -1,0 +1,16 @@
+﻿.label {
+    background-color: lightsteelblue;
+    padding: 0.75rem;
+    text-transform: capitalize;
+    font-weight: bold;
+}
+
+table {
+    width: 75%;
+    align-self: flex-start;
+}
+
+table th, table td {
+    padding: 0.25rem;
+    border-bottom: 1px solid #d6d5d5;
+}

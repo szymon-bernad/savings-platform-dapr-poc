@@ -1,0 +1,6 @@
+@SavingsPlatform.Dashboard.Api_HostAddress = https://localhost:32768
+
+GET {{SavingsPlatform.Dashboard.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
