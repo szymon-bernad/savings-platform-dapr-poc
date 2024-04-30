@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{2C9465
 		postgres-dev.bicep = postgres-dev.bicep
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SavingsPlatform.Dashboard.Api", "SavingsPlatform.Dashboard.Api\SavingsPlatform.Dashboard.Api.csproj", "{1F856534-FF36-48D8-94C3-4F9ED05F84B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{43CA322B-D289-47E7-89A4-6F4FDA3ABD6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43CA322B-D289-47E7-89A4-6F4FDA3ABD6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43CA322B-D289-47E7-89A4-6F4FDA3ABD6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F856534-FF36-48D8-94C3-4F9ED05F84B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F856534-FF36-48D8-94C3-4F9ED05F84B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F856534-FF36-48D8-94C3-4F9ED05F84B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F856534-FF36-48D8-94C3-4F9ED05F84B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

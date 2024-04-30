@@ -3,7 +3,6 @@ using Dapr.Client;
 using Microsoft.Extensions.Options;
 using SavingsPlatform.Contracts.Platform;
 using SavingsPlatform.Dashboard.Api.Config;
-using static Dapr.Client.Autogen.Grpc.v1.Dapr;
 using DaprClient = Dapr.Client.DaprClient;
 
 namespace SavingsPlatform.Dashboard.Api.Api.Modules

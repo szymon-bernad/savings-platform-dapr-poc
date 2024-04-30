@@ -12,6 +12,16 @@ services:
     ports:
       - "5136:80"
 
+  savingsplatform.dashboard:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - DAPR_HTTP_PORT=3608
+      - SimulationConfig__SpeedMultiplier=1
+      - NAMESPACE=savingsplatform
+    ports:
+      - "5165:80"
+
   savingsplatform.eventstore:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -51,6 +61,19 @@ services:
       "--app-id", "dapr-savings-evt",
       "--app-port", "80",
       "--dapr-http-port", "3606",
+      "--placement-host-address", "placement:50000",
+      "--resources-path", "/components",
+      "-config", "/configuration/config.yaml"
+      ]
+    volumes:
+      - "./dapr/components/:/components"
+      - "./dapr/configuration:/configuration"
+
+  savingsplatform.dashboard-dapr:
+    command: ["./daprd",
+      "--app-id", "dapr-dashboard",
+      "--app-port", "80",
+      "--dapr-http-port", "3608",
       "--placement-host-address", "placement:50000",
       "--resources-path", "/components",
       "-config", "/configuration/config.yaml"

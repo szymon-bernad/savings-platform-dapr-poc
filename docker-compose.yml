@@ -73,6 +73,19 @@ services:
     depends_on:
       -  savingsplatform.paymentproxy
 
+  savingsplatform.dashboard:
+    build:
+      context: .
+      dockerfile: ./SavingsPlatform.Dashboard.Api/Dockerfile
+    depends_on:
+      - placement
+
+  savingsplatform.dashboard-dapr:
+    image: "daprio/daprd:1.12.2"
+    network_mode: "service:savingsplatform.dashboard"
+    depends_on:
+      -  savingsplatform.dashboard
+
 volumes:
   redis:
     driver: local
