@@ -22,21 +22,12 @@ namespace SavingsPlatform.Accounts.DependencyInjection
         {
             services.AddOptions<SavingsAccountsStateStoreConfig>().Bind(configuration.GetSection("StateStore"));
             services.AddOptions<SimulationConfig>().Bind(configuration.GetSection("SimulationConfig"));
-            services.AddHttpClient<IStateEntryRepository<SettlementAccountState>, 
-                SettlementAccountRepository>(
-                httpClient =>
-                {
-                    httpClient.BaseAddress = new Uri($"http://localhost:{daprPort}");
-                });
+            services.AddScoped<IStateEntryRepository<SettlementAccountState>, SettlementAccountRepository>();
             services.AddScoped<IStateMapper<AggregateState<SettlementAccountDto>, SettlementAccountState>, SettlementAccountStateMapper>();
             services.AddScoped<IAggregateRootFactory<SettlementAccount, SettlementAccountState>, SettlementAccountFactory>();
 
             services.AddScoped<IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountStateMapper>();
-            services.AddHttpClient<IStateEntryRepository<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>(
-                httpClient =>
-                {
-                    httpClient.BaseAddress = new Uri($"http://localhost:{daprPort}");
-                });
+            services.AddScoped<IStateEntryRepository<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>();
             services.AddScoped<IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountFactory>();
             services.AddScoped<IEventPublishingService, DaprEventPublishingService>();
             services.AddActors(options =>

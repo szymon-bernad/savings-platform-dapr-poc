@@ -23,7 +23,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
 
             return new InstantAccessSavingsAccountState
             {
-                Key = state.Data!.Key,
+                Key = state.Data!.Id,
                 ExternalRef = state.Data!.ExternalRef,
                 SettlementAccountRef = state.Data!.SettlementAccountRef,
                 InterestRate = state.Data!.InterestRate,
@@ -43,6 +43,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
         {
             return new AggregateState<InstantAccessSavingsAccountDto>
             {
+                Id = dto.Key,
                 Data = new InstantAccessSavingsAccountDto(
                     dto.Key,
                     dto.ExternalRef,

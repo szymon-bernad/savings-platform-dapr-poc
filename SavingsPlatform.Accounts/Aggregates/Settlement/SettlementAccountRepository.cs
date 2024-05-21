@@ -15,22 +15,22 @@ using System.Threading.Tasks;
 using System.Net.Http.Json;
 using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Enums;
+using SavingsPlatform.Common.Repositories.Marten;
+using Marten;
 
 namespace SavingsPlatform.Accounts.Aggregates.Settlement
 {
-    public class SettlementAccountRepository : StateEntryRepositoryBase<SettlementAccountState, SettlementAccountDto>
+    public class SettlementAccountRepository : MartenStateEntryRepositoryBase<SettlementAccountState, SettlementAccountDto>
     {
         public SettlementAccountRepository(
-            DaprClient daprClient,
-            HttpClient httpClient,
-            IOptions<SavingsAccountsStateStoreConfig> stateStoreCfg,
+            IDocumentSession docSession,
             IStateMapper<AggregateState<SettlementAccountDto>, SettlementAccountState> mapper,
             IEventPublishingService eventPublishingService)
-            : base(daprClient, httpClient, stateStoreCfg, mapper, eventPublishingService)
+            : base(docSession, mapper, eventPublishingService)
         {    
         }
 
-        protected override string GetFilterQuery(string keyName, string keyValue, bool isKeyValueAString = false)
+      /*  protected override string GetFilterQuery(string keyName, string keyValue, bool isKeyValueAString = false)
         {
             var keyValuePart = string.IsNullOrWhiteSpace(keyValue) ? 
                                 "" :
@@ -45,6 +45,6 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                 keyValuePart +
                 $"{{\"EQ\":{{\"data.type\":{(int)AccountType.SettlementAccount}}}}}" +
                 $"]}}}}";
-        }
+        }*/
     }
 }

@@ -20,7 +20,7 @@ namespace SavingsPlatform.Api.Api.Modules
         {
             app.MapGet("/v1/savings-account/{refid}", async (string refid, IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
             {
-                var result = await repo.QueryAccountsByKeyAsync("data.externalRef", refid);
+                var result = await repo.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { refid });
                 return Results.Ok(result);
             });
 
@@ -133,7 +133,7 @@ namespace SavingsPlatform.Api.Api.Modules
                 throw new InvalidOperationException($"SettlementAccountRef is required for CreateNew request for ExternalRef = {request.ExternalRef}.");
             }
 
-            var platformId = (await repo.QueryAccountsByKeyAsync("data.externalRef", settlementAccRef))
+            var platformId = (await repo.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { settlementAccRef }))
                                 .FirstOrDefault()?.PlatformId ??
                                     string.Empty;
             request.Details!.TryGetValue(DepositRequestDetailsKeys.InterestRate, out var interestRateStr);

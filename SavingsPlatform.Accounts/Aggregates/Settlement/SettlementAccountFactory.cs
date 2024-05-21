@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SavingsPlatform.Accounts.Aggregates.Settlement.Models;
+using SavingsPlatform.Contracts.Accounts.Enums;
 
 namespace SavingsPlatform.Accounts.Aggregates.Settlement
 {
@@ -32,7 +33,10 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
 
         public async Task<SettlementAccount> GetInstanceByExternalRefAsync(string externalRef)
         {
-            var stateEntry = (await _repository.QueryAccountsByKeyAsync("data.externalRef", externalRef)).SingleOrDefault();
+            var stateEntry = (await _repository.QueryAccountsByKeyAsync(
+                                            new string[] { "data.externalRef", "data.type" }, 
+                                            new string[] { externalRef, $"{nameof(AccountType.SettlementAccount)}" }))
+                                        .SingleOrDefault();
             if (stateEntry is not null)
             {
                 return new SettlementAccount(_repository, stateEntry);

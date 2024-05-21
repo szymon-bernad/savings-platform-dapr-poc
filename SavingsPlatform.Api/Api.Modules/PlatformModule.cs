@@ -111,7 +111,7 @@ namespace SavingsPlatform.Api.Api.Modules
             app.MapGet("/v1/platforms/:get-ids",
                         async (IStateEntryRepository<SettlementAccountState> repo) =>
                         {
-                            var platformIds = (await repo.QueryAccountsByKeyAsync("data.type", string.Empty))
+                            var platformIds = (await repo.QueryAccountsByKeyAsync(new string[] { "Data.Type", "Data." }, new string[] { "1" }))
                                         .Select(acc => acc.PlatformId)
                                         .Distinct();
                             return Results.Ok(platformIds);

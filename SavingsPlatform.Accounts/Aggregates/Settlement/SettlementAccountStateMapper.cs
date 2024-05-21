@@ -17,14 +17,15 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
 
             return new SettlementAccountState
             {
-                Key = state.Data!.Key,
+                Key = state.Id,
                 ExternalRef = state.Data!.ExternalRef,
                 OpenedOn = state.Data.OpenedOn,
                 TotalBalance = state.Data!.TotalBalance,
                 LastTransactionId = state.Data.LastTransactionId,
                 PlatformId = state.Data.PlatformId ?? string.Empty,
                 HasUnpublishedEvents = state.HasUnpublishedEvents,
-                UnpublishedEvents = unpubEvents
+                UnpublishedEvents = unpubEvents,
+                Version = state.Version,
             };
         }
 
@@ -32,7 +33,9 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
         {
             return new AggregateState<SettlementAccountDto>
             {
+                Id = dto.Key,
                 Data = new SettlementAccountDto(dto.Key, dto.ExternalRef, dto.OpenedOn, dto.TotalBalance, dto.LastTransactionId, dto.PlatformId, dto.Type),
+                Version = dto.Version,
                 HasUnpublishedEvents = dto.HasUnpublishedEvents,
                 UnpublishedEventsJson = dto.UnpublishedEvents?.Any() ?? false ?
                     JsonSerializer.Serialize(Enumerable.Cast<object>(dto.UnpublishedEvents)) : null

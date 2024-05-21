@@ -1,4 +1,5 @@
-﻿using SavingsPlatform.Contracts.Accounts.Enums;
+﻿using Marten.Schema;
+using SavingsPlatform.Contracts.Accounts.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace SavingsPlatform.Accounts.Aggregates.Settlement.Models
 {
     public record SettlementAccountDto(
-        string Key,
+        string Id,
         string ExternalRef,
         DateTime? OpenedOn,
         decimal TotalBalance,

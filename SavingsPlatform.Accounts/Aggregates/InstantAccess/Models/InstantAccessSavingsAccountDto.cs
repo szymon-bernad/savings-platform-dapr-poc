@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
 {
     public record InstantAccessSavingsAccountDto(
-        string Key,
+        string Id,
         string ExternalRef,
         string SettlementAccountRef,
         DateTime? OpenedOn,

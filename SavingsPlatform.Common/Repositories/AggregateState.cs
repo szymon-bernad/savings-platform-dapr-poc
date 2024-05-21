@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Marten.Schema;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,10 +9,15 @@ namespace SavingsPlatform.Common.Repositories
 {
     public class AggregateState<T> : IAggregateState
     {
+        public string Id { get; set; } = string.Empty;
+
         public T? Data { get; set; }
 
         public bool HasUnpublishedEvents { get; set; } = false;
         public string? UnpublishedEventsJson { get; set; } = default;
+
+        [Version]
+        public int Version { get; set; } = 0;
 
         public string? ETag { get; set; } = null;
     }

@@ -3,6 +3,7 @@ using Dapr.Client;
 using SavingsPlatform.Accounts.Aggregates.Settlement;
 using SavingsPlatform.Accounts.Aggregates.Settlement.Models;
 using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Requests;
 
 namespace SavingsPlatform.Api.Api.Modules
@@ -13,7 +14,9 @@ namespace SavingsPlatform.Api.Api.Modules
         {
             app.MapGet("/v1/settlement-account/{refid}", async (string refid, IStateEntryRepository<SettlementAccountState> repo) =>
             {
-                var result = await repo.QueryAccountsByKeyAsync("data.externalRef", refid);
+                var result = await repo.QueryAccountsByKeyAsync(
+                    new string[] { "data.externalRef", "data.type" },
+                    new string[] { refid, $"{nameof(AccountType.SettlementAccount)}" } );
                 return Results.Ok(result);
             });
 

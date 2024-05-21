@@ -53,14 +53,14 @@ namespace SavingsPlatform.Common.Repositories
             return TryUpsertAccountAsync(account);
         }
 
-        public Task<bool> TryUpdateAccountAsync(TEntry account)
+        public Task<bool> TryUpdateAccountAsync(TEntry account, bool dataUpdate = true)
         {
             return TryUpsertAccountAsync(account);
         }
 
-        public async Task<bool> TryUpsertAccountAsync(TEntry account)
+        public async Task<bool> TryUpsertAccountAsync(TEntry account, bool dataUpdate = true)
         {
-            var isSuccess = await PostToStateStoreAsync(account);
+            var isSuccess = !dataUpdate || (await PostToStateStoreAsync(account));
 
             if (isSuccess)
             {
@@ -75,9 +75,9 @@ namespace SavingsPlatform.Common.Repositories
             return false;
         }
 
-        public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string keyName, string keyValue, bool isKeyValueAString = true)
+        public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string[] keyName, string[] keyValue, bool isKeyValueAString = true)
         {
-            var filter = GetFilterQuery(keyName, keyValue);
+            var filter = GetFilterQuery(keyName.First(), keyValue.First());
             var result = await _daprClient.QueryStateAsync<AggregateState<TData>>(
                 StateStoreName,
                 filter,

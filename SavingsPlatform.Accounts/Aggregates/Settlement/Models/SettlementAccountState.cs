@@ -12,6 +12,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement.Models
     {
         public required string Key { get; init; }
         public string? Etag { get; set; }
+        public int Version { get; set; } = 0;
         public string? ExternalRef { get; init; }
         public DateTime? OpenedOn { get; set; }
         public decimal TotalBalance { get; set; }

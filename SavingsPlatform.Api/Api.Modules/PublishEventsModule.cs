@@ -18,14 +18,14 @@ namespace SavingsPlatform.Api.Api.Modules
                        IMediator mediator
                        ) =>
             {
-                var settleRes = await settlementRepository.QueryAccountsByKeyAsync("hasUnpublishedEvents", "true", false);
+                var settleRes = await settlementRepository.QueryAccountsByKeyAsync(new string[] { "HasUnpublishedEvents" }, new string[] { "true" }, false);
 
                 await Task.WhenAll(
                     settleRes.Select(
                         acc => mediator.Send(new PublishEventsCommand(acc.Key, AccountType.SettlementAccount))
                         ));
 
-                var iasaRes = await iasaRepository.QueryAccountsByKeyAsync("hasUnpublishedEvents", "true", false);
+                var iasaRes = await iasaRepository.QueryAccountsByKeyAsync(new string[] { "hasUnpublishedEvents" }, new string[] { "true" }, false);
 
                 await Task.WhenAll(
                     iasaRes.Select(

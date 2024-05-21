@@ -39,7 +39,7 @@ namespace SavingsPlatform.Common.Accounts
                     $"Account with {nameof(_state.Key)} = {key} already exists");
             }
 
-            var queryRes = await _repository.QueryAccountsByKeyAsync("externalRef", externalRef);
+            var queryRes = await _repository.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { externalRef });
             if (queryRes.Any())
             {
                 throw new InvalidOperationException(
@@ -79,7 +79,7 @@ namespace SavingsPlatform.Common.Accounts
             }
         }
 
-        public async Task TryUpdateAsync()
+        public async Task TryUpdateAsync(bool dataUpdate = true)
         {
             var res = await _repository.TryUpdateAccountAsync(_state!);
 
