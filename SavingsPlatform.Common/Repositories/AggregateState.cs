@@ -17,7 +17,7 @@ namespace SavingsPlatform.Common.Repositories
         public string? UnpublishedEventsJson { get; set; } = default;
 
         [Version]
-        public int Version { get; set; } = 0;
+        public Guid Version { get; set; } = Guid.Empty;
 
         public string? ETag { get; set; } = null;
     }

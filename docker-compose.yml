@@ -22,13 +22,12 @@ services:
     volumes:
       - "~/apps/postgres:/var/lib/postgresql/data"
 
-  redis:
-    image: redis:7.2.3
-    hostname: statestoreredis
+  postgrespay:
+    image: postgres:14-alpine
     ports:
-      - "6379:6379"
+      - "5434:5432"
     volumes:
-      - ./redis-volume:/data
+      - "~/apps/postgres-pay:/var/lib/postgresql/data"
 
   savingsplatform.api:
     build:
@@ -66,6 +65,7 @@ services:
       dockerfile: ./SavingsPlatform.PaymentProxy/Dockerfile
     depends_on:
       - placement
+      - postgrespay
 
   savingsplatform.paymentproxy-dapr:
     image: "daprio/daprd:1.12.2"

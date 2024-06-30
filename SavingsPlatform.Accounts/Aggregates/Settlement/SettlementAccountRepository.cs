@@ -17,6 +17,8 @@ using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Common.Repositories.Marten;
 using Marten;
+using Microsoft.Extensions.Logging;
+using SavingsPlatform.Common.Helpers;
 
 namespace SavingsPlatform.Accounts.Aggregates.Settlement
 {
@@ -25,26 +27,11 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
         public SettlementAccountRepository(
             IDocumentSession docSession,
             IStateMapper<AggregateState<SettlementAccountDto>, SettlementAccountState> mapper,
-            IEventPublishingService eventPublishingService)
-            : base(docSession, mapper, eventPublishingService)
+            IEventPublishingService eventPublishingService,
+            ILogger<SettlementAccountRepository> logger)
+            : base(docSession, mapper, eventPublishingService, logger)
         {    
         }
 
-      /*  protected override string GetFilterQuery(string keyName, string keyValue, bool isKeyValueAString = false)
-        {
-            var keyValuePart = string.IsNullOrWhiteSpace(keyValue) ? 
-                                "" :
-                                $"{{\"EQ\":{{\"{keyName}\":{(isKeyValueAString ? $"\"{keyValue}\"" : keyValue)}}}}},";
-
-            if (string.IsNullOrWhiteSpace(keyValuePart))
-            {
-                return base.GetFilterQuery("data.type", $"{(int)AccountType.SettlementAccount}", false);
-            }
-
-            return $"{{\"filter\":{{\"AND\":[" +
-                keyValuePart +
-                $"{{\"EQ\":{{\"data.type\":{(int)AccountType.SettlementAccount}}}}}" +
-                $"]}}}}";
-        }*/
     }
 }

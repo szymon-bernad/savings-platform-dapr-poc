@@ -1,9 +1,13 @@
 ﻿using Dapr.Actors.Runtime;
+using Microsoft.Extensions.Logging;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Aggregates.Settlement;
 using SavingsPlatform.Accounts.Aggregates.Settlement.Models;
+using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Common.Services;
+using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Models;
 using SavingsPlatform.Contracts.Accounts.Requests;
@@ -14,22 +18,28 @@ namespace SavingsPlatform.Accounts.Actors
 {
     public class DepositTransferActor : Actor, IDepositTransferActor, IRemindable
     {
-        private readonly IAggregateRootFactory<SettlementAccount, SettlementAccountState> _settlementAccountFactory;
+        private readonly ISettlementAccountFactory _settlementAccountFactory;
         private readonly IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> _iasaFactory;
         private readonly DaprClient _daprClient;
+        private readonly ILogger<DepositTransferActor> _logger;
+        private readonly IEventPublishingService _eventPublishingService;
 
         private const string TransferAttempt = nameof(TransferAttempt);
         private const string DepositTransferState = nameof(DepositTransferState);
 
         public DepositTransferActor(
-            IAggregateRootFactory<SettlementAccount, SettlementAccountState> settlementAccountFactory,
+            ISettlementAccountFactory settlementAccountFactory,
             IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> iasaFactory,
             DaprClient daprClient,
-            ActorHost host) : base(host)
+            ActorHost host,
+            IEventPublishingService eventPublishingService,
+            ILogger<DepositTransferActor> logger) : base(host)
         {
             _settlementAccountFactory = settlementAccountFactory;
             _iasaFactory = iasaFactory;
             _daprClient = daprClient;
+            _logger = logger;
+            _eventPublishingService = eventPublishingService;
         }
 
         public Task InitiateTransferAsync(DepositTransferData data)
@@ -72,7 +82,7 @@ namespace SavingsPlatform.Accounts.Actors
 
         private async Task StartTransferFromSettlementToSavings(DepositTransferData transferData)
         {
-            var registerReminder = false;
+            var registerReminder = false;                   
             var settlementAccount = await _settlementAccountFactory.GetInstanceAsync(transferData.DebtorAccountId);
 
             if (settlementAccount.State!.TotalBalance < transferData.Amount)
@@ -81,10 +91,24 @@ namespace SavingsPlatform.Accounts.Actors
             }
             else
             {
-                await settlementAccount.DebitAsync(new DebitAccount(settlementAccount.State!.ExternalRef!, transferData.Amount, DateTime.UtcNow, transferData.TransactionId));
-                transferData = transferData with { Status = DepositTransferStatus.DebtorDebited };
-                await StateManager.SetStateAsync(DepositTransferState, transferData);
-                await UnregisterReminderAsync(TransferAttempt);
+                try
+                {
+                    await _eventPublishingService.PublishCommand(
+                        new DebitSettlementAccount(
+                            transferData.DebtorAccountId,
+                            transferData.Amount,
+                            DateTime.UtcNow,
+                            transferData.TransactionId));
+
+                    transferData = transferData with { Status = DepositTransferStatus.DebtorDebited };
+                    await StateManager.SetStateAsync(DepositTransferState, transferData);
+                    await UnregisterReminderAsync(TransferAttempt);
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError($"Debiting SettlementAccount failed: {ex.Message}");
+                    registerReminder = true;
+                }
             }
 
             if(transferData.IsFirstAttempt && registerReminder)
@@ -99,7 +123,6 @@ namespace SavingsPlatform.Accounts.Actors
                     TimeSpan.FromMinutes(2),
                     TimeSpan.FromMinutes(2));
             }
-
         }
 
         private async Task StartTransferFromSavingsToSettlement(DepositTransferData transferData)

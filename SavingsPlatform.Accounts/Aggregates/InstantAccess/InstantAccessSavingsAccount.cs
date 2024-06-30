@@ -47,13 +47,12 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                 {
                     Id = Guid.NewGuid().ToString(),
                     ExternalRef = request.ExternalRef,
-                    SettlementAccountRef = request.SettlementAccountRef,
                     AccountId = accountId,
                     AccountType = AccountType.SavingsAccount,
                     Timestamp = DateTime.UtcNow,
-                    TransferId = request.TransferId,
                     EventType = typeof(AccountCreated).Name,
                     PlatformId = request.PlatformId ?? string.Empty,
+                    TransferId = request.TransferId,
                 }
             };
 
@@ -61,7 +60,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
             {
                 Key = accountId,
                 ExternalRef = request.ExternalRef,
-                SettlementAccountRef = request.SettlementAccountRef,
                 OpenedOn = DateTime.UtcNow,
                 InterestRate = request.InterestRate,
                 TotalBalance = 0m,

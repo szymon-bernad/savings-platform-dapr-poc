@@ -21,13 +21,6 @@ namespace SavingsPlatform.Accounts.Handlers
 
         public async Task Handle(CreateInstantSavingsAccountCommand request, CancellationToken cancellationToken)
         {
-            var result = await _repository.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { request.ExternalRef });
-
-            if (result?.Any() ?? false)
-            {                 
-                throw new InvalidOperationException($"Account with externalRef = {request.ExternalRef} already exists.");
-            }
-
             var instance = await _aggregateFactory.GetInstanceAsync();
             await instance.CreateAsync(request);
         }

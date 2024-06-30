@@ -1,4 +1,5 @@
-﻿using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
+﻿using Microsoft.Extensions.Logging;
+using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Aggregates.Settlement.Models;
 using SavingsPlatform.Common.Accounts;
 using SavingsPlatform.Common.Helpers;
@@ -17,22 +18,27 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
 {
     public class SettlementAccount : AccountAggregateRootBase<SettlementAccountState>
     {
-
+        private readonly ILogger<SettlementAccount> _loggerInstance;
         public SettlementAccount(
             IStateEntryRepository<SettlementAccountState> repository,
-            SettlementAccountState? state = default) : base(repository, state) 
+            ILogger<SettlementAccount> logger,
+            SettlementAccountState? state = default) : base(repository, state, logger) 
         {
+            _loggerInstance = logger;
         }
 
         public async Task CreateAsync(CreateSettlementAccount request)
         {
             if (request is null || string.IsNullOrEmpty(request.ExternalRef))
             {
+                _loggerInstance.LogError($"Cannot create SettlementAccount with null {nameof(request)} or {nameof(request.ExternalRef)}");
                 throw new InvalidOperationException($"{nameof(request.ExternalRef)} cannot be null");
             }
 
             if (_state is not null)
             {
+                _loggerInstance.LogError($"SettlementAccount with {nameof(SettlementAccountState.ExternalRef)} = {request.ExternalRef} already exists");
+
                 throw new InvalidOperationException(
                     $"SettlementAccount with {nameof(SettlementAccountState.ExternalRef)} = {request.ExternalRef}" +
                     $" already exists");
@@ -71,6 +77,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
             };
 
             await CreateAsync(state);
+            _loggerInstance.LogInformation($"SettlementAccount with {nameof(SettlementAccountState.ExternalRef)} = {request.ExternalRef} created successfully");
         }
 
         public async Task CreditAsync(CreditAccount request)
@@ -100,8 +107,10 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
             await TryUpdateAsync();
         }
 
-        public async Task DebitAsync(DebitAccount request)
+        public async Task DebitAsync(DebitSettlementAccount request)
         {
+            _logger.LogInformation($"SettlementAccount {_state.ExternalRef}:" +
+                $"BEFORE [TotalBalance = {_state.TotalBalance}, Amount = {request.Amount}, Version = {_state.Version}]");
             ValidateForDebit(request.Amount);
 
             var transactionId = Guid.NewGuid();
@@ -123,6 +132,9 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
             };
 
             await TryUpdateAsync();
+
+            _logger.LogInformation($"SettlementAccount {_state.ExternalRef}:" +
+                $"AFTER [TotalBalance = {_state.TotalBalance}, Amount = {request.Amount}, Version = {_state.Version}]");
         }
     }
 }

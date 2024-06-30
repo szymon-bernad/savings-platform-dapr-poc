@@ -12,7 +12,7 @@ namespace SavingsPlatform.Common.Interfaces
 
         public decimal TotalBalance { get; set; }
 
-        public string PlatformId { get; set; }
+        public string PlatformId { get; init; }
 
         public bool HasUnpublishedEvents { get; set; }
 

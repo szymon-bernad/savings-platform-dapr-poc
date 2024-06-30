@@ -10,6 +10,6 @@ namespace SavingsPlatform.Common.Services
     {
         Task PublishEvents(ICollection<object> events);
 
-        Task PublishCommand(object command);
+        Task PublishCommand<T>(T command);
     }
 }

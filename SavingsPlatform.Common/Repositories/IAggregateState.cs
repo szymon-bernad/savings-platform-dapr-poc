@@ -11,7 +11,7 @@ namespace SavingsPlatform.Common.Repositories
         public bool HasUnpublishedEvents { get; set; }
         public string? UnpublishedEventsJson { get; set; }
 
-        public int Version { get; set; }
+        public Guid Version { get; set; }
 
         public string? ETag { get; set; }
     }

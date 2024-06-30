@@ -12,12 +12,12 @@ namespace SavingsPlatform.Accounts.Handlers
 {
     public class PublishEventsCommandHandler : IRequestHandler<PublishEventsCommand>
     {
-        private readonly IAggregateRootFactory<SettlementAccount, SettlementAccountState> _settlementFactory;
+        private readonly ISettlementAccountFactory _settlementFactory;
         private readonly IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> _instantAccessFactory;
 
 
         public PublishEventsCommandHandler( 
-            IAggregateRootFactory<SettlementAccount, SettlementAccountState> settlementFactory,
+            ISettlementAccountFactory settlementFactory,
             IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> iasaFactory)
         {
             _settlementFactory = settlementFactory;

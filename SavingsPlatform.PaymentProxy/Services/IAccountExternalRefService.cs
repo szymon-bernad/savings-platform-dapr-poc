@@ -4,8 +4,12 @@ namespace SavingsPlatform.PaymentProxy.Services
 {
     public interface IAccountExternalRefService
     {
-        Task StoreAccountMapping(AccountExternalMappingEntry entry);
+        public Task<AccountExternalMappingEntry> GetAccountEntryByExternalRef(string externalRef);
 
-        Task<AccountExternalMappingEntry> GetEntryByExternalRef(string externalRef);
+        public Task<PlatformMappingEntry> GetPlatformEntry(string platformId);
+
+        public Task StoreAccountMapping(AccountExternalMappingEntry entry);
+
+        public Task StorePlatformMapping(PlatformMappingEntry entry);
     }
 }

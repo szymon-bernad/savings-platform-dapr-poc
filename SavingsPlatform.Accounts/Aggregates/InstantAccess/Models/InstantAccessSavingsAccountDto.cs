@@ -11,7 +11,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
     public record InstantAccessSavingsAccountDto(
         string Id,
         string ExternalRef,
-        string SettlementAccountRef,
         DateTime? OpenedOn,
         DateTime? ActivatedOn,
         decimal InterestRate,

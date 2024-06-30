@@ -17,20 +17,27 @@ namespace SavingsPlatform.PaymentProxy.Services
             IOptions<SavingsAccountsStateStoreConfig> stateStoreCfg)
         {
             _daprClient = daprClient;
-            StateStoreName = stateStoreCfg?.Value?.StateStoreName ?? throw new ArgumentNullException(nameof(StateStoreName));
-            PubSubName = stateStoreCfg?.Value?.PubSubName ?? throw new ArgumentNullException(nameof(PubSubName));
+            StateStoreName = stateStoreCfg?.Value?.StateStoreName ?? throw new ArgumentNullException(nameof(stateStoreCfg));
+            PubSubName = stateStoreCfg?.Value?.PubSubName ?? throw new ArgumentNullException(nameof(stateStoreCfg));
         }
 
-        public Task<AccountExternalMappingEntry> GetEntryByExternalRef(string externalRef)
+        public Task<AccountExternalMappingEntry> GetAccountEntryByExternalRef(string externalRef)
         {
             return _daprClient.GetStateAsync<AccountExternalMappingEntry>(
                 StateStoreName,
                 externalRef);
         }
 
+        public Task<PlatformMappingEntry> GetPlatformEntry(string platformId)
+        {
+            return _daprClient.GetStateAsync<PlatformMappingEntry>(
+                StateStoreName,
+                platformId);
+        }
+
         public async Task StoreAccountMapping(AccountExternalMappingEntry entry)
         {
-            var res = await GetEntryByExternalRef(entry.ExternalRef);
+            var res = await GetAccountEntryByExternalRef(entry.ExternalRef);
             if (res != null)
             {
                 throw new InvalidOperationException($"{nameof(AccountExternalMappingEntry)}" +
@@ -38,6 +45,19 @@ namespace SavingsPlatform.PaymentProxy.Services
             }
 
             await _daprClient.SaveStateAsync(StateStoreName, entry.ExternalRef, entry);
+        }
+
+        public async Task StorePlatformMapping(PlatformMappingEntry entry)
+        {
+            var res = await GetPlatformEntry(entry.PlatformId);
+            if (res != null && !res.SettlementRef.Equals(entry.SettlementRef, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Found {nameof(PlatformMappingEntry)}" +
+                    $" with Id = {entry.PlatformId} " +
+                    $" and different {nameof(PlatformMappingEntry.SettlementRef)} value.");
+            }
+
+            await _daprClient.SaveStateAsync(StateStoreName, entry.PlatformId, entry);
         }
     }
 }

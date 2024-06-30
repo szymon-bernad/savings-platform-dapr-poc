@@ -23,13 +23,13 @@ namespace SavingsPlatform.Accounts.DependencyInjection
             services.AddOptions<SavingsAccountsStateStoreConfig>().Bind(configuration.GetSection("StateStore"));
             services.AddOptions<SimulationConfig>().Bind(configuration.GetSection("SimulationConfig"));
             services.AddScoped<IStateEntryRepository<SettlementAccountState>, SettlementAccountRepository>();
-            services.AddScoped<IStateMapper<AggregateState<SettlementAccountDto>, SettlementAccountState>, SettlementAccountStateMapper>();
-            services.AddScoped<IAggregateRootFactory<SettlementAccount, SettlementAccountState>, SettlementAccountFactory>();
+            services.AddTransient<IStateMapper<AggregateState<SettlementAccountDto>, SettlementAccountState>, SettlementAccountStateMapper>();
+            services.AddTransient<ISettlementAccountFactory, SettlementAccountFactory>();
 
-            services.AddScoped<IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountStateMapper>();
+            services.AddTransient<IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountStateMapper>();
             services.AddScoped<IStateEntryRepository<InstantAccessSavingsAccountState>, InstantAccessSavingsAccountRepository>();
-            services.AddScoped<IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountFactory>();
-            services.AddScoped<IEventPublishingService, DaprEventPublishingService>();
+            services.AddTransient<IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState>, InstantAccessSavingsAccountFactory>();
+            services.AddTransient<IEventPublishingService, DaprEventPublishingService>();
             services.AddActors(options =>
             {
                 options.Actors.RegisterActor<DepositTransferActor>();

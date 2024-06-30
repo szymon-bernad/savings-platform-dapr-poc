@@ -17,12 +17,12 @@ namespace SavingsPlatform.Accounts.Handlers
     {
         private readonly IActorProxyFactory _actorProxyFactory;
         private readonly IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> _iasaFactory;
-        private readonly IAggregateRootFactory<SettlementAccount, SettlementAccountState> _settlementAccountFactory;
+        private readonly ISettlementAccountFactory _settlementAccountFactory;
 
         public TransferDepositCommandHandler(
             IActorProxyFactory actorProxyFactory,
             IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> iasaFactory,
-            IAggregateRootFactory<SettlementAccount, SettlementAccountState> settlementAccountFactory
+            ISettlementAccountFactory settlementAccountFactory
             )
         {
             _actorProxyFactory = actorProxyFactory;
@@ -48,7 +48,7 @@ namespace SavingsPlatform.Accounts.Handlers
             if (!request.WaitForAccountCreation)
             {
                 var savingsAcc = await _iasaFactory.GetInstanceByExternalRefAsync(request.SavingsAccountRef);
-                var settlementAcc = await _settlementAccountFactory.GetInstanceByExternalRefAsync(savingsAcc.State!.SettlementAccountRef!);
+                var settlementAcc = await _settlementAccountFactory.GetInstanceByPlatformId(savingsAcc.State!.PlatformId);
 
                 dtData = dtData with
                 {

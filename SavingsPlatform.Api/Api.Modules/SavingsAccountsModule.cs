@@ -1,16 +1,13 @@
 ﻿using Carter;
-using Grpc.Core;
 using MediatR;
-using Microsoft.AspNetCore.Http.HttpResults;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Aggregates.Settlement;
 using SavingsPlatform.Accounts.Aggregates.Settlement.Models;
-using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Common.Interfaces;
+using SavingsPlatform.Common.Services;
 using SavingsPlatform.Contracts.Accounts.Commands;
 using SavingsPlatform.Contracts.Accounts.Enums;
 using SavingsPlatform.Contracts.Accounts.Requests;
-using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace SavingsPlatform.Api.Api.Modules
 {
@@ -25,7 +22,7 @@ namespace SavingsPlatform.Api.Api.Modules
             });
 
             app.MapPost("/v1/settlement-accounts",
-                async (IAggregateRootFactory<SettlementAccount, SettlementAccountState> aggregateFactory,
+                async (ISettlementAccountFactory aggregateFactory,
                        CreateSettlementAccount request) =>
             {
                 var instance = await aggregateFactory.GetInstanceAsync();
@@ -35,23 +32,24 @@ namespace SavingsPlatform.Api.Api.Modules
             });
 
             app.MapPost("v1/savings-accounts/:process-file",
-                async (IMediator mediator, 
+                async (IMediator mediator,
+                       IEventPublishingService eventPublishingService,
                        DepositRequestsFile request,
-                       IStateEntryRepository<SettlementAccountState> repo) =>
+                       IStateEntryRepository<InstantAccessSavingsAccountState> repo) =>
                 {
 
                     if (request?.Requests?.Any() ?? false)
                         {
                             var requestsGrouped = request.Requests.GroupBy(r => r.ExternalRef);
 
-                            await Task.WhenAll(requestsGrouped.Select(g => this.ProcessRequestGroup(mediator, g.ToList(), repo)));
+                            await Task.WhenAll(requestsGrouped.Select(g => this.ProcessRequestGroup(eventPublishingService, g.ToList(), repo)));
                         }
                     });
                 }
 
-        private async Task ProcessRequestGroup(IMediator mediator, 
-                                               ICollection<DepositRequest> requestGroup,
-                                               IStateEntryRepository<SettlementAccountState> repo)
+        private async Task ProcessRequestGroup(IEventPublishingService eventPublishingService,
+                                                ICollection<DepositRequest> requestGroup,
+                                               IStateEntryRepository<InstantAccessSavingsAccountState> repo)
         {
             if (!(requestGroup?.Any() ?? false))
             {
@@ -78,17 +76,17 @@ namespace SavingsPlatform.Api.Api.Modules
             var createReq = createNewReqs.FirstOrDefault();
             if (createReq is not null)
             {
-                await ProcessCreateRequest(mediator, createReq, transferId, repo);
+                await ProcessCreateRequest(eventPublishingService, createReq, transferId, repo);
             }
 
             var transferReq = transferReqs.FirstOrDefault();
             if (transferReq is not null)
             {
-                await ProcessTransferRequest(mediator, transferReq, transferId, (createReq is not null));
+                await ProcessTransferRequest(eventPublishingService, transferReq, transferId, (createReq is not null));
             }
         }
 
-        private async Task ProcessTransferRequest(IMediator mediator, DepositRequest transferReq, string? transferId, bool waitForAccountCreation = false)
+        private async Task ProcessTransferRequest(IEventPublishingService eventPublishingService, DepositRequest transferReq, string? transferId, bool waitForAccountCreation = false)
         {
             var amount = 0m;
             transferReq.Details!.TryGetValue(DepositRequestDetailsKeys.TransferAmount, out var amountStr);
@@ -101,8 +99,9 @@ namespace SavingsPlatform.Api.Api.Modules
                 throw new InvalidOperationException($"TransferAmount must be a valid decimal for Transfer request for ExternalRef = {transferReq.ExternalRef}.");
             }
 
-            var direction = TransferDirection.ToSavingsAccount;
             transferReq.Details!.TryGetValue(DepositRequestDetailsKeys.TransferDirection, out var directionStr);
+
+            TransferDirection direction;
             if (directionStr is null)
             {
                 throw new InvalidOperationException($"TransferDirection is required for Transfer request for ExternalRef = {transferReq.ExternalRef}.");
@@ -119,23 +118,35 @@ namespace SavingsPlatform.Api.Api.Modules
                 direction,
                 transferId,
                 waitForAccountCreation);
-            await mediator.Send(transferCmd);
+            try
+            {
+                await eventPublishingService.PublishCommand(transferCmd);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
-        private async Task ProcessCreateRequest(IMediator mediator, 
+        private async Task ProcessCreateRequest(IEventPublishingService eventPublishingService,
                                                 DepositRequest request,
                                                 string? transferId,
-                                                IStateEntryRepository<SettlementAccountState> repo)
+                                                IStateEntryRepository<InstantAccessSavingsAccountState> repo)
         {
-            request.Details!.TryGetValue(DepositRequestDetailsKeys.SettlementAccountRef, out var settlementAccRef);
-            if (settlementAccRef is null)
+
+            var result = await repo.QueryAccountsByKeyAsync(
+                    new string[] { "data.externalRef" },
+                    new string[] { request.ExternalRef });
+            if ((result?.Any() ?? false))
             {
-                throw new InvalidOperationException($"SettlementAccountRef is required for CreateNew request for ExternalRef = {request.ExternalRef}.");
+                throw new InvalidOperationException($"Account with ExternalRef = {request.ExternalRef} already exists.");
             }
 
-            var platformId = (await repo.QueryAccountsByKeyAsync(new string[] { "data.externalRef" }, new string[] { settlementAccRef }))
-                                .FirstOrDefault()?.PlatformId ??
-                                    string.Empty;
+            request.Details!.TryGetValue(DepositRequestDetailsKeys.PlatformId, out var platformId);
+            if (platformId is null)
+            {
+                throw new InvalidOperationException($"PlatformId is required for CreateNew request for ExternalRef = {request.ExternalRef}.");
+            }
             request.Details!.TryGetValue(DepositRequestDetailsKeys.InterestRate, out var interestRateStr);
             decimal interestRate;
             if (interestRateStr is null)
@@ -145,16 +156,15 @@ namespace SavingsPlatform.Api.Api.Modules
             else if (!decimal.TryParse(interestRateStr, out interestRate))
             {
                 throw new InvalidOperationException($"InterestRate must be a valid decimal for CreateNew request for ExternalRef = {request.ExternalRef}.");
-            }
+            }   
 
             var createCmd = new CreateInstantSavingsAccountCommand(
                 request.ExternalRef,
                 interestRate,
-                settlementAccRef,
                 platformId,
                 transferId);
 
-            await mediator.Send(createCmd);
+                await eventPublishingService.PublishCommand(createCmd);
         }
     }
 }
