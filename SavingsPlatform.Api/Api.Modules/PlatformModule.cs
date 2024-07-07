@@ -108,14 +108,21 @@ namespace SavingsPlatform.Api.Api.Modules
             app.MapPost("/v1/commands",
                         [Topic("pubsub", "commands")] async (PubSubCommand evt, IMediator mediator) =>
                         {
-                            if (evt is not null && evt.Data is not null)
+                            try
                             {
-                                var cmdString = JsonSerializer.Serialize(evt.Data);
-                                var type = Type.GetType(evt.CommandType, false);
-                                var cmd = JsonSerializer.Deserialize(evt.Data, type);
-                                await mediator.Send(cmd);
+                                if (evt is not null && evt.Data is not null)
+                                {
+                                    var cmdString = JsonSerializer.Serialize(evt.Data);
+                                    var type = Type.GetType(evt.CommandType, false);
+                                    var cmd = JsonSerializer.Deserialize(evt.Data, type);
+                                    await mediator.Send(cmd);
+                                }
                             }
-                            return false;
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error processing command: {ex.Message}");
+                                throw;
+                            }
                         });
 
             app.MapGet("/v1/platforms/:get-ids",

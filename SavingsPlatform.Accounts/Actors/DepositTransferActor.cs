@@ -42,16 +42,22 @@ namespace SavingsPlatform.Accounts.Actors
             _eventPublishingService = eventPublishingService;
         }
 
-        public Task InitiateTransferAsync(DepositTransferData data)
+        public async Task InitiateTransferAsync(DepositTransferData data)
         {
+            if(data.Status == DepositTransferStatus.DebtorDebited)
+            {
+                await UnregisterReminderAsync(TransferAttempt);
+                return;
+            }
+
             if (data.WaitForAccountCreation)
             {
                 data = data with { Status = DepositTransferStatus.AwaitingAccountCreation };
-                return StateManager.SetStateAsync(DepositTransferState, data);
+                await StateManager.SetStateAsync(DepositTransferState, data);
             }
             else
             {
-                return StartTransfer(data);
+                await StartTransfer(data);
             }
         }
 
@@ -77,7 +83,6 @@ namespace SavingsPlatform.Accounts.Actors
                 _ => throw new InvalidOperationException("Unsupported Transfer.")
             };
         }
-
 
 
         private async Task StartTransferFromSettlementToSavings(DepositTransferData transferData)
