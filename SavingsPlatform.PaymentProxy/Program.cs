@@ -5,6 +5,11 @@ using SavingsPlatform.Accounts.Config;
 using SavingsPlatform.PaymentProxy.Services;
 using Microsoft.AspNetCore.Http.Json;
 using SavingsPlatform.PaymentProxy;
+using SavingsPlatform.PaymentProxy.ApiClients;
+using OpenTelemetry.Resources;
+using System.Reflection;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,9 +24,23 @@ builder.Services.AddDaprClient(dpr => { dpr.UseJsonSerializationOptions(jsonOpti
 builder.Services.AddOptions<SavingsAccountsStateStoreConfig>().Bind(builder.Configuration.GetSection("StateStore"));
 builder.Services.AddOptions<ProxyConfig>().Bind(builder.Configuration.GetSection("ProxyCfg"));
 builder.Services.AddScoped<IAccountExternalRefService, AccountExternalRefService>();
+builder.Services.AddScoped<ISavingsPlatformApiClient, SavingsPlatformApiClient>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCarter();
+
+builder.Services.AddOpenTelemetry()
+      .ConfigureResource(resource => resource.AddService(serviceName: Assembly.GetExecutingAssembly().GetName().Name))
+      .WithTracing(tracing => tracing
+          .AddAspNetCoreInstrumentation()
+          .AddConsoleExporter()
+          .AddZipkinExporter(opts =>
+          {
+              opts.Endpoint = new Uri("http://zipkin:9411/api/v2/spans");
+          }))
+      .WithMetrics(metrics => metrics
+          .AddAspNetCoreInstrumentation()
+          .AddConsoleExporter());
 
 builder.Services.Configure<JsonOptions>(options =>
 {

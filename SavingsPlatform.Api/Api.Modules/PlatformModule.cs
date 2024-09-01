@@ -13,6 +13,9 @@ using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess;
 using SavingsPlatform.Accounts.Aggregates.Settlement.Models;
 using SavingsPlatform.Accounts.Aggregates.Settlement;
+using MediatR;
+using SavingsPlatform.Contracts.Accounts.Commands;
+using System.Text.Json;
 
 namespace SavingsPlatform.Api.Api.Modules
 {
@@ -25,7 +28,7 @@ namespace SavingsPlatform.Api.Api.Modules
                 async (AccountCreated evt, 
                 IActorProxyFactory actorProxyFactory,
                 IAggregateRootFactory<InstantAccessSavingsAccount, InstantAccessSavingsAccountState> iasaFactory,
-                IAggregateRootFactory<SettlementAccount, SettlementAccountState> settlementAccountFactory) =>
+                ISettlementAccountFactory settlementAccountFactory) =>
               {
                   if (evt.AccountType == AccountType.SavingsAccount && evt.TransferId != null)
                   {
@@ -33,15 +36,21 @@ namespace SavingsPlatform.Api.Api.Modules
                       new ActorId(evt.TransferId),
                           nameof(DepositTransferActor));
                       var savingsAcc = await iasaFactory.GetInstanceByExternalRefAsync(evt.ExternalRef);
-                      var settlementAcc = await settlementAccountFactory.GetInstanceByExternalRefAsync(savingsAcc.State!.SettlementAccountRef!);
+                      var settlementAcc = await settlementAccountFactory.GetInstanceByPlatformId(savingsAcc.State!.PlatformId);
 
                       await actorInstance.HandleStartAfterAccountCreation(savingsAcc.State!.Key, settlementAcc.State!.Key);
                   }
               });
 
             app.MapPost("v1/accounts/:handle-debited-event",
-                        [Topic("pubsub", "accountdebited")] async (AccountDebited @event, IActorProxyFactory actorProxyFactory) =>
+                        [Topic("pubsub", "accountdebited")] 
+                        async (AccountDebited @event, 
+                                IActorProxyFactory actorProxyFactory,
+                                ILogger<PlatformModule> logger) =>
                         {
+
+                            logger.LogInformation($"Handling debited event [AccountRef = {@event.ExternalRef}, " +
+                                $"Amount = {@event.Amount}, TransferId = {@event.TransferId}]");
                             if (@event.TransferId != null)
                             {
                                 var actorInstance = actorProxyFactory.CreateActorProxy<IDepositTransferActor>(
@@ -97,21 +106,29 @@ namespace SavingsPlatform.Api.Api.Modules
                         });
 
             app.MapPost("/v1/commands",
-                        [Topic("pubsub", "commands")] async (CloudEvent<JsonObject> evt) =>
+                        [Topic("pubsub", "commands")] async (PubSubCommand evt, IMediator mediator) =>
                         {
-                            if (evt != null && evt.Data != null)
+                            try
                             {
-                                var typeProperty = evt.Data["EventType"]!.GetValue<string>();
-                                var res = JsonDeserializeHelper.Deserialize(evt.Data, Type.GetType(typeProperty)!);
+                                if (evt is not null && evt.Data is not null)
+                                {
+                                    var cmdString = JsonSerializer.Serialize(evt.Data);
+                                    var type = Type.GetType(evt.CommandType, false);
+                                    var cmd = JsonSerializer.Deserialize(evt.Data, type);
+                                    await mediator.Send(cmd);
+                                }
                             }
-
-                            await Task.Delay(250);
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error processing command: {ex.Message}");
+                                throw;
+                            }
                         });
 
             app.MapGet("/v1/platforms/:get-ids",
                         async (IStateEntryRepository<SettlementAccountState> repo) =>
                         {
-                            var platformIds = (await repo.QueryAccountsByKeyAsync(new string[] { "Data.Type", "Data." }, new string[] { "1" }))
+                            var platformIds = (await repo.QueryAccountsByKeyAsync(new string[] { "data.type"}, new string[] { "SettlementAccount" }))
                                         .Select(acc => acc.PlatformId)
                                         .Distinct();
                             return Results.Ok(platformIds);

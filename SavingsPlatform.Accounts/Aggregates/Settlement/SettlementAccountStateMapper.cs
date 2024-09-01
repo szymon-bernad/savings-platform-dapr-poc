@@ -25,7 +25,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
                 PlatformId = state.Data.PlatformId ?? string.Empty,
                 HasUnpublishedEvents = state.HasUnpublishedEvents,
                 UnpublishedEvents = unpubEvents,
-                Version = state.Version,
+                VersionId = state.Version,
             };
         }
 
@@ -35,7 +35,7 @@ namespace SavingsPlatform.Accounts.Aggregates.Settlement
             {
                 Id = dto.Key,
                 Data = new SettlementAccountDto(dto.Key, dto.ExternalRef, dto.OpenedOn, dto.TotalBalance, dto.LastTransactionId, dto.PlatformId, dto.Type),
-                Version = dto.Version,
+                Version = dto.VersionId ?? Guid.Empty,
                 HasUnpublishedEvents = dto.HasUnpublishedEvents,
                 UnpublishedEventsJson = dto.UnpublishedEvents?.Any() ?? false ?
                     JsonSerializer.Serialize(Enumerable.Cast<object>(dto.UnpublishedEvents)) : null

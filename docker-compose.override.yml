@@ -8,7 +8,8 @@ services:
       - DAPR_HTTP_PORT=3605
       - SimulationConfig__SpeedMultiplier=1
       - NAMESPACE=savingsplatform
-      - StateStore__StateStoreName=statestore-postgres 
+      - StateStore__StateStoreName=statestore-postgres
+      - ConnectionStrings__DocumentStore=host='postgres';username='postgres';password='example';port='5432';database='doc-store'
     ports:
       - "5136:80"
 
@@ -88,13 +89,16 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=dapr-store
 
+  postgrespay:
+    environment:
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=payments-store
+
   placement:
     command: ["./placement", "-port", "50000", "-log-level", "debug"]
     ports:
       - "50000:50000"
-  
-  redis:
-    command: redis-server --appendonly yes --requirepass passw00rd
 
   savingsplatform.paymentproxy-dapr:
     command: ["./daprd",

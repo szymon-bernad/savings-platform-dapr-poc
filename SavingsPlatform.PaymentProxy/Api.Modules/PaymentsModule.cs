@@ -20,7 +20,7 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
                        IOptions<ProxyConfig> proxyCfg,
                        ProcessInboundPayment request) =>
                 {
-                    var mapping = await accountExternalRefService.GetEntryByExternalRef(request.AccountRef);
+                    var mapping = await accountExternalRefService.GetAccountEntryByExternalRef(request.AccountRef);
                     if (mapping is not null && mapping.AccountId is not null)
                     {
                         if (mapping.Type != Contracts.Accounts.Enums.AccountType.SettlementAccount)
@@ -56,7 +56,7 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
                        IOptions<ProxyConfig> proxyCfg,
                        ProcessOutboundPayment request) =>
                 {
-                    var mapping = await accountExternalRefService.GetEntryByExternalRef(request.DebtorAccountRef);
+                    var mapping = await accountExternalRefService.GetAccountEntryByExternalRef(request.DebtorAccountRef);
                     if (mapping is not null && mapping.AccountId is not null)
                     {
                         if (mapping.Type != Contracts.Accounts.Enums.AccountType.SettlementAccount)
@@ -74,6 +74,7 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
 
                         var appName = proxyCfg?.Value?.SavingsPlatformAppName ??
                             throw new ArgumentNullException(nameof(proxyCfg.Value.SavingsPlatformAppName));
+
                         await daprClient.InvokeMethodAsync<DebitAccount>(
                             appName,
                             "v1/settlement-account/:debit",
@@ -90,11 +91,40 @@ namespace SavingsPlatform.PaymentProxy.Api.Modules
             app.MapPost("/v1/accounts/:handle-created-event",
               [Topic("pubsub", "accountcreated")] async (AccountCreated evt, IAccountExternalRefService svc) =>
               {
-                  if (evt != null)
-                  {
-                      await svc.StoreAccountMapping(
-                      new AccountExternalMappingEntry(evt.ExternalRef!, evt.AccountId!, evt.AccountType));
-                  }
+                    if (evt is null)
+                    {
+                        return;
+                    }
+
+                    await svc.StoreAccountMapping(
+                        new AccountExternalMappingEntry(
+                            evt.ExternalRef,
+                            evt.AccountId,
+                            evt.AccountType));
+
+                    if (evt.AccountType == Contracts.Accounts.Enums.AccountType.SettlementAccount)
+                    {
+                        await svc.StorePlatformMapping(new PlatformMappingEntry(evt.PlatformId, evt.ExternalRef, new List<string>()));
+                    }      
+                    else if (evt.AccountType == Contracts.Accounts.Enums.AccountType.SavingsAccount)
+                    {                      
+                        var platform = await svc.GetPlatformEntry(evt.PlatformId);
+                        if (platform is not null)
+                        {
+                            var accountRefs = new List<string> { evt.ExternalRef };
+                            if(platform.AccountRefs.Any())
+                            {
+                                accountRefs.AddRange(platform.AccountRefs);
+                            }
+
+                            platform = platform with { AccountRefs = accountRefs };
+                            await svc.StorePlatformMapping(platform);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Platform with Id = {evt.PlatformId} not found.");
+                        }
+                    }
               });
         }
     }

@@ -12,8 +12,13 @@ namespace SavingsPlatform.Api.Api.Modules
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/v1/settlement-account/{refid}", async (string refid, IStateEntryRepository<SettlementAccountState> repo) =>
+            app.MapGet("/v1/settlement-account/{refid}", 
+                async (string refid, 
+                        IStateEntryRepository<SettlementAccountState> repo, 
+                        ILogger<SettlementAccountsModule> logger) =>
             {
+
+                logger.LogInformation("Received Query Request for settlement account with external ref: {refid}", refid);
                 var result = await repo.QueryAccountsByKeyAsync(
                     new string[] { "data.externalRef", "data.type" },
                     new string[] { refid, $"{nameof(AccountType.SettlementAccount)}" } );
@@ -22,18 +27,18 @@ namespace SavingsPlatform.Api.Api.Modules
 
             app.MapPost("/v1/settlement-account/:credit",
                 async (CreditAccount request,
-                        IAggregateRootFactory<SettlementAccount, SettlementAccountState> aggregateFactory,
+                        ISettlementAccountFactory aggregateFactory,
                         DaprClient daprClient) =>
                 {
                     var instance = await aggregateFactory.GetInstanceAsync(request.AccountId);
                     await instance.CreditAsync(request);
-
+                    
                     return Results.NoContent();
                 });
 
             app.MapPost("v1/settlement-account/:debit",
-                 async (DebitAccount request,
-                        IAggregateRootFactory<SettlementAccount, SettlementAccountState> aggregateFactory,
+                 async (DebitSettlementAccount request,
+                        ISettlementAccountFactory aggregateFactory,
                         DaprClient daprClient) =>
                  {
                      var instance = await aggregateFactory.GetInstanceAsync(request.AccountId);

@@ -25,7 +25,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
             {
                 Key = state.Data!.Id,
                 ExternalRef = state.Data!.ExternalRef,
-                SettlementAccountRef = state.Data!.SettlementAccountRef,
                 InterestRate = state.Data!.InterestRate,
                 AccruedInterest = state.Data!.AccruedInterest,
                 OpenedOn = state.Data.OpenedOn,
@@ -47,7 +46,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
                 Data = new InstantAccessSavingsAccountDto(
                     dto.Key,
                     dto.ExternalRef,
-                    dto.SettlementAccountRef,
                     dto.OpenedOn,
                     dto.ActivatedOn,
                     dto.InterestRate,

@@ -1,28 +1,31 @@
 ﻿using Marten;
+using Marten.Services;
+using Microsoft.Extensions.Logging;
+using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Services;
-using System.Collections.ObjectModel;
-using System.Net.Http;
-using System.Security.Principal;
 using System.Text;
 
 namespace SavingsPlatform.Common.Repositories.Marten
 {
-    public class MartenStateEntryRepositoryBase<TEntry, TData> : IStateEntryRepository<TEntry>
+    public abstract class MartenStateEntryRepositoryBase<TEntry, TData> : IStateEntryRepository<TEntry>
         where TEntry : IAggregateStateEntry
     {
         private readonly IDocumentSession _documentSession;
         private readonly IStateMapper<AggregateState<TData>, TEntry> _mapper;
         private readonly IEventPublishingService _eventPublishingService;
+        private readonly ILogger _logger;
 
         public MartenStateEntryRepositoryBase(
             IDocumentSession docSession,
             IStateMapper<AggregateState<TData>, TEntry> stateMapper,
-            IEventPublishingService publishingService )
+            IEventPublishingService publishingService,
+            ILogger logger)
         {
             _documentSession = docSession;
             _mapper = stateMapper;
             _eventPublishingService = publishingService;
+            _logger = logger;
         }
 
         public Task AddAccountAsync(TEntry account)
@@ -37,37 +40,10 @@ namespace SavingsPlatform.Common.Repositories.Marten
 
         public async Task<ICollection<TEntry>> QueryAccountsByKeyAsync(string[] keyNames, string[] keyValue, bool isKeyValueAString = true)
         {
-            var queryStringBuilder = new StringBuilder();
+            _logger.LogInformation($"Querying accounts by key: {string.Join(", ", keyNames)}.");
 
-            foreach (var keyName in keyNames)
-            {
-                if (queryStringBuilder.Length > 0)
-                {
-                    queryStringBuilder.Append(" AND ");
-                }
+            var result = await QueryAggregateStateByKeysAsync(keyNames, keyValue, isKeyValueAString);
 
-                var properties = keyName.Split('.');
-                queryStringBuilder.Append("data");
-                if (properties.Length > 2)
-                {
-                    queryStringBuilder.Append(" ->" + string.Join("->", properties.SkipLast(1).Select(p => $" '{p}' ")));
-                    queryStringBuilder.Append($" ->> '{properties.Last()}' = ?");
-                }
-                else if (properties.Length == 2)
-                {
-                    queryStringBuilder.Append($" -> '{properties[0]}' ->> '{properties[1]}' = ?");
-                }
-                else
-                {
-                    queryStringBuilder.Append($" ->> '{properties[0]}' = ?");
-                }
-            }
-
-            var queryStr = queryStringBuilder.ToString();
-            var result = (await _documentSession
-                                .QueryAsync<AggregateState<TData>>(queryStr, keyValue))
-                                .ToList();
-                                
             if (result?.Any() ?? false)
             {
                 var mappedData = result.Select(
@@ -97,17 +73,10 @@ namespace SavingsPlatform.Common.Repositories.Marten
             return default;
         }
 
-        protected Task PostToStateStoreAsync(AggregateState<TData> entry)
+        protected async Task PostToStateStoreAsync(AggregateState<TData> entry)
         {
-            if (entry.Version > 1)
-            {
-                _documentSession.Update(entry);
-            }
-            else
-            {
-                _documentSession.Store(entry);
-            }
-            return _documentSession.SaveChangesAsync();
+            _documentSession.Store(entry);
+            await _documentSession.SaveChangesAsync();
         }
 
         public async Task<bool> TryUpsertAccountAsync(TEntry entry, bool dataUpdate = true)
@@ -117,7 +86,6 @@ namespace SavingsPlatform.Common.Repositories.Marten
                 var stateDto = _mapper.ReverseMap(entry);
                 if (dataUpdate)
                 {
-                    ++stateDto.Version;
                     await PostToStateStoreAsync(stateDto);
                 }
 
@@ -138,8 +106,42 @@ namespace SavingsPlatform.Common.Repositories.Marten
         {
             entry.HasUnpublishedEvents = false;
             entry.UnpublishedEventsJson = null;
-            ++entry.Version;
+
             return PostToStateStoreAsync(entry);
+        }
+
+        protected async Task<ICollection<AggregateState<TData>>> QueryAggregateStateByKeysAsync(string[] keyNames, string[] keyValue, bool isKeyValueAString = true)
+        {
+            var queryStringBuilder = new StringBuilder();
+
+            foreach (var keyName in keyNames)
+            {
+                if (queryStringBuilder.Length > 0)
+                {
+                    queryStringBuilder.Append(" AND ");
+                }
+
+                var properties = keyName.Split('.');
+                queryStringBuilder.Append("data");
+                if (properties.Length > 2)
+                {
+                    queryStringBuilder.Append(" ->" + string.Join("->", properties.SkipLast(1).Select(p => $" '{p}' ")));
+                    queryStringBuilder.Append($" ->> '{properties.Last()}' = ?");
+                }
+                else if (properties.Length == 2)
+                {
+                    queryStringBuilder.Append($" -> '{properties[0]}' ->> '{properties[1]}' = ?");
+                }
+                else
+                {
+                    queryStringBuilder.Append($" ->> '{properties[0]}' = ?");
+                }
+            }
+            var queryStr = queryStringBuilder.ToString();
+            var result = (await _documentSession.QueryAsync<AggregateState<TData>>(queryStr, keyValue))
+                                .ToList();
+
+            return result;
         }
     }
 }

@@ -4,15 +4,18 @@ metadata:
   name: statestore-payments
   namespace: payments
 spec:
-  type: state.redis
+  type: state.postgresql
   version: v1
-  initTimeout: '60s'
+  initTimeout: "75s"
   metadata:
-  - name: redisHost
-    value: statestoreredis:6379
-  - name: redisPassword
-    value: "passw00rd"
+  # Connection string
+  - name: connectionString
+    value: "host=postgrespay user=postgres password=example port=5432 connect_timeout=65 database=payments-store"
+  # Timeout for database operations, in seconds (optional)
   - name: timeoutInSeconds
     value: 60
+  # Uncomment this if you wish to use PostgreSQL as a state store for actors (optional)
+  - name: actorStateStore
+    value: "false"
 scopes:
 - dapr-payment-proxy

@@ -1,9 +1,12 @@
 ﻿using Dapr;
 using Dapr.Client;
 using Marten;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SavingsPlatform.Accounts.Aggregates.InstantAccess.Models;
+using SavingsPlatform.Accounts.Aggregates.Settlement.Models;
 using SavingsPlatform.Accounts.Config;
+using SavingsPlatform.Common.Helpers;
 using SavingsPlatform.Common.Interfaces;
 using SavingsPlatform.Common.Repositories;
 using SavingsPlatform.Common.Repositories.Marten;
@@ -20,8 +23,9 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess
         public InstantAccessSavingsAccountRepository(
             IDocumentSession docSession,
             IStateMapper<AggregateState<InstantAccessSavingsAccountDto>, InstantAccessSavingsAccountState> mapper,
-            IEventPublishingService eventPublishingService)
-            : base(docSession, mapper, eventPublishingService)
+            IEventPublishingService eventPublishingService,
+            ILogger<MartenStateEntryRepositoryBase<InstantAccessSavingsAccountState, InstantAccessSavingsAccountDto>> logger)
+            : base(docSession, mapper, eventPublishingService, logger)
         {
         }
     }

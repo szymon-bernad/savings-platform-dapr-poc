@@ -1,6 +1,7 @@
 ﻿using Dapr.Client;
 using Microsoft.Extensions.Options;
 using SavingsPlatform.Accounts.Config;
+using SavingsPlatform.Contracts.Accounts.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Net.Http;
 using System.Runtime.InteropServices.JavaScript;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
@@ -30,9 +32,13 @@ namespace SavingsPlatform.Common.Services
             _daprClient = daprClient;
         }
 
-        public Task PublishCommand(object command)
+        public Task PublishCommand<T>(T command)
         {
-            return _daprClient.PublishEventAsync(PubSubName, CommandsTopicName, command);
+            var cmdString = JsonSerializer.Serialize(command);
+            return _daprClient.PublishEventAsync(
+                PubSubName, 
+                CommandsTopicName, 
+                new PubSubCommand { CommandType = typeof(T).AssemblyQualifiedName, Data = JsonNode.Parse(cmdString).AsObject() });
         }
 
         public Task PublishEvents(ICollection<object> events)
@@ -40,24 +46,31 @@ namespace SavingsPlatform.Common.Services
             return Task.WhenAll(
                 events.Select(e =>
                 {
-                    var jsonObject = e as JsonObject;
-                    if (jsonObject is not null)
+                    try
                     {
-                        var evtType = jsonObject["EventType"]?.GetValue<string>().ToLower();
-                        if (!string.IsNullOrEmpty(evtType))
+                        var jsonObject = e as JsonObject;
+                        if (jsonObject is not null)
                         {
-                            return _daprClient.PublishEventAsync(PubSubName, evtType, jsonObject);
+                            var evtType = jsonObject["EventType"]?.GetValue<string>().ToLower();
+                            if (!string.IsNullOrEmpty(evtType))
+                            {
+                                return _daprClient.PublishEventAsync(PubSubName, evtType, jsonObject);
+                            }
                         }
+                        else
+                        {
+                            var evtType = e.GetType().GetProperty("EventType")?.GetValue(e)?.ToString()?.ToLower();
+                            if (!string.IsNullOrEmpty(evtType))
+                            {
+                                return _daprClient.PublishEventAsync(PubSubName, evtType, e);
+                            }
+                        }
+                        return Task.CompletedTask;
                     }
-                    else
+                    catch (Exception ex)
                     {
-                      var evtType = e.GetType().GetProperty("EventType")?.GetValue(e)?.ToString()?.ToLower();
-                      if (!string.IsNullOrEmpty(evtType))
-                      {
-                          return _daprClient.PublishEventAsync(PubSubName, evtType, e);
-                      }
+                        throw;
                     }
-                    return Task.CompletedTask;
                 }));
         }
     }

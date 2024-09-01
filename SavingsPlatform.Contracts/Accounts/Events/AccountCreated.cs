@@ -11,7 +11,7 @@ namespace SavingsPlatform.Contracts.Accounts.Events
 
         public string? SettlementAccountRef { get; set; }
 
-        public string? PlatformId { get; set; } = string.Empty;
+        public string PlatformId { get; set; } = string.Empty;
 
         public required string AccountId { get; set; }
 

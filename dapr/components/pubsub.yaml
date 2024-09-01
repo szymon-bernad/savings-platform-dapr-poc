@@ -18,4 +18,10 @@ spec:
   - name: reconnectWait
     value: "45s"
   - name: concurrency
-    value: parallel
+    value: "parallel"
+  - name: deliveryMode
+    value: "2"
+  - name: enableDeadLetter
+    value: "true"
+  - name: requeueInFailure
+    value: "true"

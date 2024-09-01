@@ -18,7 +18,7 @@ namespace SavingsPlatform.Api.Api.Modules
                        IMediator mediator
                        ) =>
             {
-                var settleRes = await settlementRepository.QueryAccountsByKeyAsync(new string[] { "HasUnpublishedEvents" }, new string[] { "true" }, false);
+                var settleRes = await settlementRepository.QueryAccountsByKeyAsync(new string[] { "hasUnpublishedEvents" }, new string[] { "true" }, false);
 
                 await Task.WhenAll(
                     settleRes.Select(

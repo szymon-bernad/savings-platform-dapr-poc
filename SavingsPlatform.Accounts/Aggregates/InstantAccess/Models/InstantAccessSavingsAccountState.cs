@@ -8,7 +8,6 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         public required string Key { get; init; } = string.Empty;
         public string? Etag { get; set; }
         public string? ExternalRef { get; init; }
-        public string? SettlementAccountRef {  get; init; }
         public DateTime? OpenedOn { get; set; }
         public DateTime? ActivatedOn { get; set; }
         public decimal InterestRate { get; set; }
@@ -17,7 +16,7 @@ namespace SavingsPlatform.Accounts.Aggregates.InstantAccess.Models
         public Guid? LastTransactionId { get; set; }
         public ProcessFrequency InterestApplicationFrequency { get; set; } = ProcessFrequency.Weekly;
         public DateTime? InterestApplicationDueOn { get; set; }
-        public string? PlatformId { get; set; }
+        public string? PlatformId { get; init; }
         public bool HasUnpublishedEvents { get; set; } = false;
         public ICollection<object>? UnpublishedEvents { get; set; } = default;
         public AccountType Type { get; set; } = AccountType.SavingsAccount;

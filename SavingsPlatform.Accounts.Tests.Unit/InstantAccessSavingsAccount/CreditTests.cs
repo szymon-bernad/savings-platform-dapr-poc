@@ -32,7 +32,6 @@ namespace SavingsPlatform.Accounts.Tests.Unit.InstantAccessSavingsAccount
                 InterestApplicationFrequency = ProcessFrequency.Daily,
                 AccruedInterest = 0m,
                 InterestRate = 1.15m,
-                SettlementAccountRef = "Test-Settlement",
                 OpenedOn = DateTime.UtcNow.AddDays(-1),
                 TotalBalance = 101m,
                 Type = AccountType.SavingsAccount,

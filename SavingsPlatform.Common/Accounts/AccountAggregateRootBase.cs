@@ -1,4 +1,5 @@
-﻿using SavingsPlatform.Common.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using SavingsPlatform.Common.Interfaces;
 
 namespace SavingsPlatform.Common.Accounts
 {
@@ -6,14 +7,16 @@ namespace SavingsPlatform.Common.Accounts
     {
         protected T? _state;
         protected readonly IStateEntryRepository<T> _repository;
+        protected readonly ILogger? _logger;
 
         public AccountAggregateRootBase(
             IStateEntryRepository<T> repository,
-            T? state = default
-            )
+            T? state = default,
+            ILogger? logger = null)
         {
             _repository = repository;
             _state = state;
+            _logger = logger;
         }
 
         protected async Task CreateAsync(T state)
@@ -24,6 +27,8 @@ namespace SavingsPlatform.Common.Accounts
 
             if (_state is null)
             {
+                _logger?.LogError($"Could not create account with {nameof(state.Key)} = {state.Key}");
+
                 throw new ApplicationException(
                     $"Account has not been persisted in the state store.");
             }
@@ -51,11 +56,13 @@ namespace SavingsPlatform.Common.Accounts
         {
             if (_state is null)
             {
+                _logger?.LogError($"{nameof(ValidateForCredit)}: Account with invalid state.");
                 throw new ApplicationException($"Account with invalid state.");
             }
 
             if (amount <= 0m)
             {
+                _logger?.LogError($"{nameof(ValidateForCredit)}: Credit transaction amount must be greater than 0.00");
                 throw new InvalidOperationException($"Credit transaction amount must be greater than 0.00");
             }
         }
@@ -64,15 +71,18 @@ namespace SavingsPlatform.Common.Accounts
         {
             if (_state is null)
             {
+                _logger?.LogError($"{nameof(ValidateForDebit)}: Account with invalid state.");
                 throw new ApplicationException($"Account with invalid state.");
             }
             if (amount <= 0m)
             {
+                _logger?.LogError($"{nameof(ValidateForDebit)}: Debiy transaction amount must be greater than 0.00");
                 throw new InvalidOperationException($"Debiy transaction amount must be greater than 0.00");
             }
 
             if (_state.TotalBalance < amount)
             {
+                _logger?.LogError($"{nameof(ValidateForDebit)}: Account with {nameof(_state.Key)} = {_state.Key} has insufficient funds.");
                 throw new InvalidOperationException(
                     $"Account with {nameof(_state.Key)} = {_state.Key}" +
                     $" has insufficient funds.");

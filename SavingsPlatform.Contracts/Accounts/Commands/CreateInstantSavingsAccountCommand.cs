@@ -10,7 +10,6 @@ namespace SavingsPlatform.Contracts.Accounts.Commands
     public record CreateInstantSavingsAccountCommand(
         string ExternalRef,
         decimal InterestRate,
-        string SettlementAccountRef,
-        string? PlatformId,
-        string? TransferId) : IRequest;
+        string PlatformId,
+        string TransferId) : IRequest;
 }
